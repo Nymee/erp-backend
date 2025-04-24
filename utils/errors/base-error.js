@@ -3,6 +3,7 @@ class BaseError extends Error {
     super(message);
     this.name = name;
     this.statusCode = statusCode;
+    // Error.captureStackTrace(this, this.constructor);                            //we'll come back to this later since the concept was a bit too complicated.
   }
 }
 
