@@ -13,3 +13,5 @@ const generateJWT = (user) => {
 
   return token;
 };
+
+module.exports = generateJWT;

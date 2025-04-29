@@ -9,8 +9,9 @@ const authenticateUser = async (req, res, next) => {
       res.status(400).json("User does not exist");
     }
 
-    if (password != user.password) {
-      res.status(400).json("Incorrect password");
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json("Incorrect password");
     }
 
     req.user = user;
