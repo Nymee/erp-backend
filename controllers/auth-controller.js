@@ -1,6 +1,7 @@
 const express = require("express");
 const Company = require("../models/company");
 const bycrypt = require("bcrypt");
+const generateJWT = require("../utils/generate-JWT");
 
 const signupCompany = async (req, res) => {
   try {
@@ -37,6 +38,9 @@ const signupCompany = async (req, res) => {
 
 const loginCompany = async (req, res) => {
   const user = req.user;
+  if (user) {
+    const token = generateJWT(user);
+  }
   res.status(200).json({
     message: "Login successful",
     token,
