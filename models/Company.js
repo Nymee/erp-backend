@@ -9,7 +9,7 @@ const companySchema = new mongoose.Schema({
   user_mobile: { type: String, required: true, unique: true },
   isVerified: {
     type: String,
-    enum: ["approve", "pending", "reject"],
+    enum: ["approved", "pending", "rejected"],
     default: "pending",
   },
 });

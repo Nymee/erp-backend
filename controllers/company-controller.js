@@ -1,15 +1,18 @@
 const Company = require("../models/Company");
 const sendMail = require("../utils/email-service");
-const user = require("../models/User");
+const User = require("../models/user");
+const bcrypt = require("bcrypt");
 
+// Verify Company
 const verifyCompany = async (req, res) => {
   try {
-    const { verified } = req.body; //verified can be approved  or rejected
+    const { verified } = req.body; // "approved" or "rejected"
     const companyId = req.params.id;
 
     const company = await Company.findById(companyId);
-    if (!company)
+    if (!company) {
       return res.status(404).json({ message: "Company does not exist" });
+    }
 
     if (company.isVerified !== "pending") {
       return res
@@ -17,16 +20,16 @@ const verifyCompany = async (req, res) => {
         .json({ message: "Company has already been updated" });
     }
 
-    if (!["approve", "rejected"].includes(verified)) {
+    if (!["approved", "rejected"].includes(verified)) {
       return res
         .status(400)
-        .json({ message: "verified status can only be approved or rejected" });
+        .json({ message: "Verified status must be 'approved' or 'rejected'" });
     }
 
     company.isVerified = verified;
     await company.save();
 
-    if (company.isVerified == "approve") {
+    if (verified === "approved") {
       await sendMail({
         to: company.email,
         subject: "Company Approved",
@@ -34,7 +37,7 @@ const verifyCompany = async (req, res) => {
       });
 
       const tempPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
       await User.create({
         name: company.user_name,
@@ -50,12 +53,15 @@ const verifyCompany = async (req, res) => {
         text: `Your account has been created.\nEmail: ${company.user_email}\nTemporary Password: ${tempPassword}`,
       });
     }
+
+    res.status(200).json({ message: `Company ${verified} successfully.` });
   } catch (err) {
     console.error("Error in verifyCompany:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
+// Get All Companies
 const getCompanies = async (req, res) => {
   try {
     const companies = await Company.find();
@@ -65,25 +71,44 @@ const getCompanies = async (req, res) => {
   }
 };
 
-const getCompanyById = async (req, res) => {
+// Get Company By ID
+const getCompanyById = async (req, res, next) => {
   try {
     const company = await Company.findById(req.params.id);
-    if (!company) return res.status(404).json({ message: "Company not found" });
+    if (!company) {
+      const error = new Error("No such company");
+      error.status = 404;
+      throw error;
+    }
     res.status(200).json(company);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch company", error });
+    next(error);
   }
-
-  const updateCompany = (req, res) => {
-    try {
-      const { id } = req.params.id;
-
-      const company = Company.findById(id);
-      if (!company) return res.status(400).json({ message: "No such company" });
-      Object.assign(company, req.body);
-      company.save();
-    } catch (error) {}
-  };
 };
 
-module.exports = { verifyCompany };
+// Update Company
+const updateCompany = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const company = await Company.findById(id);
+
+    if (!company) {
+      const error = new Error("No such company");
+      error.status = 404;
+      throw error;
+    }
+
+    Object.assign(company, req.body);
+    await company.save();
+    res.status(200).json(company);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  verifyCompany,
+  getCompanies,
+  getCompanyById,
+  updateCompany,
+};
