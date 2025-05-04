@@ -1,5 +1,5 @@
 const express = require("express");
-const Company = require("../models/company");
+const Company = require("../models/Company");
 const bycrypt = require("bcrypt");
 const generateJWT = require("../utils/generate-JWT");
 

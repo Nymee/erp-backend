@@ -1,6 +1,6 @@
-const Company = require("../models/company");
+const Company = require("../models/Company");
 const sendMail = require("../utils/email-service");
-const User = require("../models/user");
+const user = require("../models/User");
 
 const verifyCompany = async (req, res) => {
   try {
