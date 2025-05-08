@@ -1,6 +1,6 @@
 const Company = require("../models/Company");
 const sendMail = require("../utils/email-service");
-const User = require("../models/user");
+const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
 // Verify Company
@@ -18,12 +18,6 @@ const verifyCompany = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Company has already been updated" });
-    }
-
-    if (!["approved", "rejected"].includes(verified)) {
-      return res
-        .status(400)
-        .json({ message: "Verified status must be 'approved' or 'rejected'" });
     }
 
     company.isVerified = verified;
