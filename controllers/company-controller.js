@@ -21,12 +21,6 @@ const verifyCompany = async (req, res) => {
         .json({ message: "Company has already been updated" });
     }
 
-    if (!["approved", "rejected"].includes(verified)) {
-      return res
-        .status(400)
-        .json({ message: "Verified status must be 'approved' or 'rejected'" });
-    }
-
     company.isVerified = verified;
 
     await company.save();
