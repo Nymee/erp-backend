@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const userSchema = new mongoose.Schema(
   {
     name: String,
@@ -9,18 +7,18 @@ const userSchema = new mongoose.Schema(
     branchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",
-      required: true,
+      required: function () {
+        return this.role !== "ADMIN";
+      },
     },
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
-      required: true,
+      required: function () {
+        return this.role !== "ADMIN";
+      },
     },
     password: String,
   },
   { timestamps: true }
 );
-
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;

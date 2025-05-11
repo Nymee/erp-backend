@@ -1,6 +1,6 @@
 const Company = require("../models/Company");
 const sendMail = require("../utils/email-service");
-const User = require("../models/user");
+const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const Branch = require("../models/Branch");
 

@@ -24,4 +24,8 @@ const updateCompanySchema = Joi.object({
   isVerified: Joi.string().valid("approve", "pending", "reject"),
 }).min(1);
 
-module.exports = { createCompanySchema, updateCompanySchema };
+const verifyCompany = Joi.object({
+  isVerified: Joi.string().valid("approve", "pending", "reject").required(),
+});
+
+module.exports = { createCompanySchema, updateCompanySchema, verifyCompany };
