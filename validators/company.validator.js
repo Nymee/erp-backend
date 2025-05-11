@@ -3,6 +3,7 @@ const Joi = require("joi");
 const verifyCompanySchema = Joi.object({
   verified: Joi.string().valid("approved", "rejected").required(),
 });
+
 const createCompanySchema = Joi.object({
   name: Joi.string().required(),
   email_id: Joi.string().email().required(),

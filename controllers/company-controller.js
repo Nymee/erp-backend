@@ -2,6 +2,7 @@ const Company = require("../models/Company");
 const sendMail = require("../utils/email-service");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const Branch = require("../models/Branch");
 
 // Verify Company
 const verifyCompany = async (req, res) => {
@@ -21,9 +22,15 @@ const verifyCompany = async (req, res) => {
     }
 
     company.isVerified = verified;
+
     await company.save();
 
     if (verified === "approved") {
+      const branch = await Branch.create({
+        name: "Head Office",
+        companyId: company._id,
+      });
+
       await sendMail({
         to: company.email,
         subject: "Company Approved",
@@ -39,6 +46,8 @@ const verifyCompany = async (req, res) => {
         mobile: company.user_mobile,
         role: "SAU",
         password: hashedPassword,
+        branchId: branch._id,
+        companyId: company._id,
       });
 
       await sendMail({

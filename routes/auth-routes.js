@@ -1,7 +1,8 @@
 const express = require("express");
 const authController = require("../controllers/auth-controller");
-const authenticateUser = require("../middlewares/authenticate-user");
+const verifyUser = require("../middlewares/verify-user");
 const validate = require("../validators/company.validator");
+const authenticateUser = require("../middlewares/authenticate-user");
 
 const router = express.Router();
 
@@ -10,6 +11,6 @@ router.post(
   validate(createCompanySchema),
   authController.signupCompany
 );
-router.post("/login-in", authenticateUser, authController.loginCompany);
+router.post("/login-in", verifyUser, authController.loginCompany);
 
 module.exports = router;

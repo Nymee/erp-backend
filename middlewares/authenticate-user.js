@@ -1,24 +1,22 @@
-const User = require("../models/User");
+// middlewares/authenticateUser.js
+const jwt = require("jsonwebtoken");
+const { AuthorizationError } = require("../utils/errors/custom-error");
 
-const authenticateUser = async (req, res, next) => {
+const authenticateUser = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next(new AuthorizationError("Unauthorized: No token provided"));
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      res.status(400).json("User does not exist");
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json("Incorrect password");
-    }
-
-    req.user = user;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = decoded; // attach decoded payload to request
     next();
   } catch (err) {
-    console.error("Auth error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return next(new AuthorizationError("Unauthorized: Invalid token"));
   }
 };
 
