@@ -18,3 +18,7 @@ const productValidationSchema = Joi.object({
   cess: Joi.number().optional(),
   sales_price: Joi.number().required(),
 });
+
+module.exports = {
+  productValidationSchema,
+};

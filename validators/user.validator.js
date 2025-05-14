@@ -27,4 +27,4 @@ const updateUserSchema = Joi.object({
   companyId: objectIdValidator("companyId").required(),
 });
 
-module.exports = createUserSchema;
+module.exports = { createUserSchema, updateUserSchema };
