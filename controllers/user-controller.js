@@ -2,7 +2,7 @@ const User = require("'../models/User");
 
 const getUsers = async (req, res, next) => {
   try {
-    const companyId = req.user.company;
+    const companyId = req.token.company_id;
 
     if (!companyId) {
       return new Error();
