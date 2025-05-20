@@ -6,3 +6,8 @@ const authenticateUser = require("../middlewares/authenticate-user");
 
 router.get("/products", authenticateUser, validate(productValidationSchema));
 router.post("/products", validate(productValidationSchema));
+router.patch(
+  "/products/:product_id",
+  authenticateUser,
+  validate(productValidationSchema)
+);

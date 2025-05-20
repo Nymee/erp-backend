@@ -12,6 +12,6 @@ router.post(
   userController.createUser
 );
 router.get("/:user_id", userController.getUserById);
-router.put("/:user_id", userController.updateUser);
+router.patch("/:user_id", userController.updateUser);
 
 module.exports = router;

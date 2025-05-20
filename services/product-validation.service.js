@@ -116,7 +116,6 @@ class ProductValidator {
 
       return {
         values: {
-          cost_price: this.cost_price,
           min_margin_price: this.minMarginPrice,
           retail_margin_price: this.retailMarginPrice,
           discount_amount: this.discountAmt,
