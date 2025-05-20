@@ -33,6 +33,13 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  if (err.name === "ProductValidationError") {
+    return res.status(400).json({
+      message: err.message,
+      error: "Product Validation Error",
+    });
+  }
+
   if (err instanceof BaseError) {
     return res.status(err.statusCode || 500).json({
       message: err.message || "Something went wrong. Please try again later.",

@@ -106,18 +106,23 @@ class ProductValidator {
       !this.retailMarginValidator() ||
       !this.discountAmountValidator()
     ) {
-      return this.error;
+      const error = new Error();
+      error.name = "ProductValidationError";
+      error.message = this.error;
+      throw error;
     } else {
       this.calculateSalesPrice();
       this.calculateExtraValues();
 
       return {
-        cost_price: this.cost_price,
-        min_margin_price: this.minMarginPrice,
-        retail_margin_price: this.retailMarginPrice,
-        discount_amount: this.discountAmt,
-        discount_price: this.discountPrice,
-        sales_price: this.salesPrice,
+        values: {
+          cost_price: this.cost_price,
+          min_margin_price: this.minMarginPrice,
+          retail_margin_price: this.retailMarginPrice,
+          discount_amount: this.discountAmt,
+          discount_price: this.discountPrice,
+          sales_price: this.salesPrice,
+        },
       };
     }
   }
@@ -136,3 +141,5 @@ class ProductValidator {
     // Extend with more computations if needed
   }
 }
+
+module.exports = ProductValidator;
