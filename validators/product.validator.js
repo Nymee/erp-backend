@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const Product = require("../models/Product");
-
+const objectIdValidator = require("../utils/object-validator");
 const createProductSchema = Joi.object({
   name: Joi.string().required(),
   cost_price: Joi.number().required(),
