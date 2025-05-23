@@ -15,6 +15,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/sales", productRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log("listening");
