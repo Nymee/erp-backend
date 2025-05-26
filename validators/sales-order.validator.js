@@ -2,6 +2,7 @@ const Joi = require("joi");
 const objectIdValidator = require("../utils/object-validator");
 
 const salesProductSchema = Joi.object({
+  product_id: objectIdValidator("productId"),
   quantity: Joi.number().required(),
   retail_margin: Joi.number().required(),
   retail_margin_type: Joi.string().required(),

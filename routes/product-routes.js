@@ -24,3 +24,5 @@ router.patch(
   updateProduct
 );
 router.delete("/products/:product_id", authenticateUser, deleteProduct);
+
+module.exports = router;

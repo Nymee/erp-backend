@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-const ProductValidator = require("../services/product-validation.service");
+const validateProduct = require("../services/product-validation.service");
 
 const getProducts = async (req, res, next) => {
   const companyId = req.token.company_id;
@@ -28,20 +28,23 @@ const createProduct = async (req, res, next) => {
       throw error;
     }
 
-    const newProduct = new ProductValidator(product);
-    const { values } = newProduct.validateProduct();
-    if (values) {
-      product.min_margin_price = values.min_margin_price;
-      product.retail_margin_price = values.retail_margin_price;
-      product.discount_amount = values.discount_amount;
-      product.discount_price = values.discount_price;
-      product.sales_price = values.sales_price;
-      product.company_id = companyId;
-    }
+    // Attach company ID before validation
+    product.company_id = companyId;
 
-    const finalProduct = new Product(product);
+    // Run validation and calculations
+    const { values } = validateProduct(product);
+
+    // Merge calculated values into product
+    const finalData = {
+      ...product,
+      ...values, // { min_margin_price, retail_margin_price, discount_amount, discount_price, sales_price }
+    };
+
+    // Save to DB
+    const finalProduct = new Product(finalData);
     await finalProduct.save();
-    res.status(201).json({ message: "Product created" });
+
+    res.status(201).json({ message: "Product created successfully" });
   } catch (err) {
     next(err);
   }
@@ -52,15 +55,16 @@ const updateProduct = async (req, res, next) => {
     const companyId = req.token.company_id;
     const productId = req.params.product_id;
 
-    const product = await Product.findOne({ _id: productId, companyId });
+    const product = await Product.findOne({ _id: productId, companyId }); //this is a mongoose document object. never overwrite it with a plain object, it will lose its save like functionalities.
     if (!product) {
       const error = new Error("Product not found or unauthorized.");
       error.status = 404;
       throw error;
     }
     Object.assign(product, req.body);
-
-    await product.save();
+    const values = validateProduct(product.toObject());
+    Object.assign(product, values);
+    await finalProduct.save();
     res.status(200).json({ message: "Product updated", product });
   } catch (err) {
     next(err);
