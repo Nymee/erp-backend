@@ -1,75 +1,76 @@
-function validateProduct(product) {
-  const {
-    cost_price,
-    min_margin,
-    max_margin,
-    retail_margin,
-    discount = 0,
-    taxable_price = 0,
-    margin_unit,
-    gst = 0,
-    cess = 0,
-  } = product;
+function validateProduct(product, context) {
+  const cost_price = Number(product.cost_price);
+  const min_margin = Number(product.min_margin);
+  const max_margin = Number(product.max_margin);
+  const retail_margin = Number(product.retail_margin);
+  const retail_margin_type = product.retail_margin_type;
+  const discount_type = product.discount_type;
+  const discount = Number(product.discount ?? 0); // Handles undefined/null
+  const margin_unit = product.margin_unit;
+  const gst = Number(product.gst ?? 0);
+  const cess = Number(product.cess ?? 0);
 
-  const parsed = {
-    cost_price: Number(cost_price),
-    min_margin: Number(min_margin),
-    max_margin: Number(max_margin),
-    retail_margin: Number(retail_margin),
-    discount: Number(discount),
-    taxable_price: Number(taxable_price),
-    margin_unit,
-    gst: Number(gst),
-    cess: Number(cess),
-  };
+  const retail_margin_unit =
+    context === "products" ? margin_unit : retail_margin_type;
+  const discount_unit = context === "products" ? margin_unit : discount_type;
 
-  const {
-    cost_price: cp,
-    min_margin: min,
-    max_margin: max,
-    retail_margin: rm,
-    discount: disc,
-    margin_unit: unit,
-    gst: gstRate,
-    cess: cessRate,
-  } = parsed;
-
-  if (min >= max) {
-    throw new Error("Min Margin should be less than max margin");
+  if (min_margin >= max_margin) {
+    throw new Error("Min margin should be less than max margin.");
   }
 
-  if (rm < min) {
+  if (retail_margin < min_margin) {
     throw new Error("Retail margin is below the minimum allowed margin.");
   }
 
-  if (rm > max) {
+  if (retail_margin > max_margin) {
     throw new Error("Retail margin exceeds the maximum allowed margin.");
   }
 
   let retailMarginPrice = 0;
   let minMarginPrice = 0;
+  let maxMarginPrice = 0;
   let discountAmt = 0;
   let discountPrice = 0;
 
-  if (unit === "per") {
-    minMarginPrice = Number((cp + (cp * min) / 100).toFixed(2));
-    retailMarginPrice = Number((cp + (cp * rm) / 100).toFixed(2));
-    discountAmt = Number(((retailMarginPrice * disc) / 100).toFixed(2));
-    discountPrice = Number((retailMarginPrice - discountAmt).toFixed(2));
-  } else if (unit === "rup") {
-    minMarginPrice = Number((cp + min).toFixed(2));
-    retailMarginPrice = Number((cp + rm).toFixed(2));
-    discountAmt = Number(disc.toFixed(2));
-    discountPrice = Number((retailMarginPrice - disc).toFixed(2));
+  if (margin_unit === "per") {
+    minMarginPrice = Number(
+      (cost_price + (cost_price * min_margin) / 100).toFixed(2)
+    );
+    maxMarginPrice = Number(
+      (cost_price + (cost_price * max_margin) / 100).toFixed(2)
+    );
+  } else if (margin_unit === "rup") {
+    minMarginPrice = Number((cost_price + min_margin).toFixed(2));
+    maxMarginPrice = Number((cost_price + max_margin).toFixed(2));
   } else {
     throw new Error("Invalid margin_unit. Must be 'per' or 'rup'.");
   }
 
-  if (discountPrice < minMarginPrice) {
-    throw new Error("Discount price should be greater than min margin price.");
+  if (retail_margin_unit === "per") {
+    retailMarginPrice = Number(
+      (cost_price + (cost_price * retail_margin) / 100).toFixed(2)
+    );
+  } else if (retail_margin_unit === "rup") {
+    retailMarginPrice = Number((cost_price + retail_margin).toFixed(2));
+  } else {
+    throw new Error("Invalid retail_margin_type. Must be 'per' or 'rup'.");
   }
 
-  const totalTaxRate = gstRate + cessRate;
+  if (discount_unit === "per") {
+    discountAmt = Number(((retailMarginPrice * discount) / 100).toFixed(2));
+  } else if (discount_unit === "rup") {
+    discountAmt = Number(discount.toFixed(2));
+  } else {
+    throw new Error("Invalid discount_type. Must be 'per' or 'rup'.");
+  }
+
+  discountPrice = Number((retailMarginPrice - discountAmt).toFixed(2));
+
+  if (discountPrice < minMarginPrice) {
+    throw new Error("Discount price should be greater than min_margin price.");
+  }
+
+  const totalTaxRate = gst + cess;
   const salesPrice = Number(
     (discountPrice + (discountPrice * totalTaxRate) / 100).toFixed(2)
   );
@@ -77,6 +78,7 @@ function validateProduct(product) {
   return {
     values: {
       min_margin_price: minMarginPrice,
+      max_margin_price: maxMarginPrice,
       retail_margin_price: retailMarginPrice,
       discount_amount: discountAmt,
       discount_price: discountPrice,
