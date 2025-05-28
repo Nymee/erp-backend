@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const validateProduct = require("./product-validation.service");
+const Sales = require("../models/Sales");
 
 async function validateWithProductData(salesProducts) {
   //you redeclared salesProducts
@@ -58,6 +59,44 @@ async function validateWithProductData(salesProducts) {
   return validatedProductArray;
 }
 
-function validateWithSalesData(salesProducts) {}
+async function validateWithSalesData(salesProducts, salesId) {
+  const estimationInfo = await Sales.findById(salesId).lean();
+  if (!estimationInfo) {
+    throw new Error("Estimation not found.");
+  }
+  const estProds = estimationInfo.products;
+  const estProdMap = new Map();
+  let validatedProductArray = [];
 
-module.exports = validateSales;
+  for (const prod of estProds) {
+    estProdMap.set(String(prod.product_id), prod);
+  }
+
+  for (const product of salesProducts) {
+    const currentEstProd = estProdMap.get(String(product.product_id));
+    const currentEstProdDetails = {
+      min_margin: currentEstProd.min_margin,
+      max_margin: currentEstProd.max_margin,
+      margin_unit: currentEstProd.margin_unit,
+      gst: currentEstProd.gst,
+      cess: currentEstProd.cess,
+    };
+    const prodToValidate = {
+      ...product,
+      ...currentEstProdDetails,
+    };
+
+    try {
+      const result = validateProduct(prodToValidate, "sales");
+      if (result) {
+        validatedProductArray.push(result);
+      }
+    } catch (err) {
+      throw new Error(
+        `Validation failed for product ${product.product_id}: ${err.message}`
+      );
+    }
+  }
+}
+
+module.exports = { validateWithProductData, validateWithSalesData };
