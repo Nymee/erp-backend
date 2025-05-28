@@ -20,9 +20,21 @@ const updateSales = async (req, res, next) => {
     const salesId = req.params.sales_id;
     const salesProducts = salesInfo.products;
     const price_update = salesInfo.price_update;
-    let result;
-    if (price_update) result = await validateWithProductData(salesProducts);
-    else result = await validateWithSalesData(salesProducts, salesId);
+
+    const estimationInfo = await Sales.findById(salesId).lean();
+    if (!estimationInfo) {
+      throw new Error("Estimation not found.");
+    }
+    const estProds = estimationInfo.products;
+    const { added: newProducts, updated } = diffProducts(
+      estimationInfo.products,
+      salesProducts
+    );
+    const existingProducts = updated.map((u) => u.to);
+    const newProdResult = await validateWithProductData(salesProducts);
+
+    if (price_update) result = await validateWithProductData(existingProducts);
+    else result = await validateWithSalesData(salesProducts, estProds);
 
     if (value) {
     }
