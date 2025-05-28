@@ -9,6 +9,4 @@ const objectIdValidator = (label = "value") =>
     return value;
   }, "ObjectId validation");
 
-module.exports = {
-  objectIdValidator,
-};
+module.exports = objectIdValidator;

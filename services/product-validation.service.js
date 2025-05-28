@@ -1,144 +1,90 @@
-class ProductValidator {
-  constructor(product) {
-    this.product = product;
+function validateProduct(product, context) {
+  const cost_price = Number(product.cost_price);
+  const min_margin = Number(product.min_margin);
+  const max_margin = Number(product.max_margin);
+  const retail_margin = Number(product.retail_margin);
+  const retail_margin_type = product.retail_margin_type;
+  const discount_type = product.discount_type;
+  const discount = Number(product.discount ?? 0); // Handles undefined/null
+  const margin_unit = product.margin_unit;
+  const gst = Number(product.gst ?? 0);
+  const cess = Number(product.cess ?? 0);
 
-    const {
-      cost_price,
-      min_margin,
-      max_margin,
-      retail_margin,
-      discount,
-      taxable_price,
-      margin_unit,
-      gst,
-      cess,
-    } = product;
+  const retail_margin_unit =
+    context === "products" ? margin_unit : retail_margin_type;
+  const discount_unit = context === "products" ? margin_unit : discount_type;
 
-    this.cost_price = Number(cost_price);
-    this.min_margin = Number(min_margin);
-    this.max_margin = Number(max_margin);
-    this.retail_margin = Number(retail_margin);
-    this.discount = Number(discount);
-    this.taxable_price = Number(taxable_price);
-    this.margin_unit = margin_unit;
-    this.gst = Number(gst);
-    this.cess = Number(cess);
-
-    this.discountAmt = 0;
-    this.retailMarginPrice = 0;
-    this.salesPrice = 0;
-    this.discountPrice = 0;
-    this.minMarginPrice = 0;
-
-    this.error = null;
+  if (min_margin >= max_margin) {
+    throw new Error("Min margin should be less than max margin.");
   }
 
-  minMaxValidator() {
-    if (this.min_margin >= this.max_margin) {
-      this.error = "Min Margin should be less than max margin";
-      return false;
-    }
-    return true;
+  if (retail_margin < min_margin) {
+    throw new Error("Retail margin is below the minimum allowed margin.");
   }
 
-  retailMarginValidator() {
-    if (this.retail_margin < this.min_margin) {
-      this.error = "Retail margin is below the minimum allowed margin.";
-      return false;
-    }
-
-    if (this.retail_margin > this.max_margin) {
-      this.error = "Retail margin exceeds the maximum allowed margin.";
-      return false;
-    }
-    return true;
+  if (retail_margin > max_margin) {
+    throw new Error("Retail margin exceeds the maximum allowed margin.");
   }
 
-  discountAmountValidator() {
-    if (this.margin_unit === "per") {
-      this.minMarginPrice = Number(
-        (this.cost_price + (this.cost_price * this.min_margin) / 100).toFixed(2)
-      );
+  let retailMarginPrice = 0;
+  let minMarginPrice = 0;
+  let maxMarginPrice = 0;
+  let discountAmt = 0;
+  let discountPrice = 0;
 
-      this.retailMarginPrice = Number(
-        (
-          this.cost_price +
-          (this.cost_price * this.retail_margin) / 100
-        ).toFixed(2)
-      );
-
-      this.discountAmt = Number(
-        ((this.retailMarginPrice * this.discount) / 100).toFixed(2)
-      );
-
-      this.discountPrice = Number(
-        (this.retailMarginPrice - this.discountAmt).toFixed(2)
-      );
-    }
-
-    if (this.margin_unit === "rup") {
-      this.minMarginPrice = Number(
-        (this.cost_price + this.min_margin).toFixed(2)
-      );
-
-      this.retailMarginPrice = Number(
-        (this.cost_price + this.retail_margin).toFixed(2)
-      );
-
-      this.discountAmt = Number(this.discount.toFixed(2));
-
-      this.discountPrice = Number(
-        (this.retailMarginPrice - this.discount).toFixed(2)
-      );
-    }
-
-    if (this.discountPrice < this.minMarginPrice) {
-      this.error = "Discount price should be greater than min margin price.";
-      return false;
-    }
-
-    return true;
-  }
-
-  validateProduct() {
-    if (
-      !this.minMaxValidator() ||
-      !this.retailMarginValidator() ||
-      !this.discountAmountValidator()
-    ) {
-      const error = new Error();
-      error.name = "ProductValidationError";
-      error.message = this.error;
-      throw error;
-    } else {
-      this.calculateSalesPrice();
-      this.calculateExtraValues();
-
-      return {
-        values: {
-          min_margin_price: this.minMarginPrice,
-          retail_margin_price: this.retailMarginPrice,
-          discount_amount: this.discountAmt,
-          discount_price: this.discountPrice,
-          sales_price: this.salesPrice,
-        },
-      };
-    }
-  }
-
-  calculateSalesPrice() {
-    const totalTaxRate = this.gst + this.cess;
-
-    this.salesPrice = Number(
-      (this.discountPrice + (this.discountPrice * totalTaxRate) / 100).toFixed(
-        2
-      )
+  if (margin_unit === "per") {
+    minMarginPrice = Number(
+      (cost_price + (cost_price * min_margin) / 100).toFixed(2)
     );
+    maxMarginPrice = Number(
+      (cost_price + (cost_price * max_margin) / 100).toFixed(2)
+    );
+  } else if (margin_unit === "rup") {
+    minMarginPrice = Number((cost_price + min_margin).toFixed(2));
+    maxMarginPrice = Number((cost_price + max_margin).toFixed(2));
+  } else {
+    throw new Error("Invalid margin_unit. Must be 'per' or 'rup'.");
   }
 
-  calculateExtraValues() {
-    // Extend with more computations if needed
+  if (retail_margin_unit === "per") {
+    retailMarginPrice = Number(
+      (cost_price + (cost_price * retail_margin) / 100).toFixed(2)
+    );
+  } else if (retail_margin_unit === "rup") {
+    retailMarginPrice = Number((cost_price + retail_margin).toFixed(2));
+  } else {
+    throw new Error("Invalid retail_margin_type. Must be 'per' or 'rup'.");
   }
+
+  if (discount_unit === "per") {
+    discountAmt = Number(((retailMarginPrice * discount) / 100).toFixed(2));
+  } else if (discount_unit === "rup") {
+    discountAmt = Number(discount.toFixed(2));
+  } else {
+    throw new Error("Invalid discount_type. Must be 'per' or 'rup'.");
+  }
+
+  discountPrice = Number((retailMarginPrice - discountAmt).toFixed(2));
+
+  if (discountPrice < minMarginPrice) {
+    throw new Error("Discount price should be greater than min_margin price.");
+  }
+
+  const totalTaxRate = gst + cess;
+  const salesPrice = Number(
+    (discountPrice + (discountPrice * totalTaxRate) / 100).toFixed(2)
+  );
+
+  return {
+    values: {
+      min_margin_price: minMarginPrice,
+      max_margin_price: maxMarginPrice,
+      retail_margin_price: retailMarginPrice,
+      discount_amount: discountAmt,
+      discount_price: discountPrice,
+      sales_price: salesPrice,
+    },
+  };
 }
 
-module.exports = ProductValidator;
+module.exports = validateProduct;
