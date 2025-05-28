@@ -59,12 +59,7 @@ async function validateWithProductData(salesProducts) {
   return validatedProductArray;
 }
 
-async function validateWithSalesData(salesProducts, salesId) {
-  const estimationInfo = await Sales.findById(salesId).lean();
-  if (!estimationInfo) {
-    throw new Error("Estimation not found.");
-  }
-  const estProds = estimationInfo.products;
+async function validateWithSalesData(salesProducts, estProds) {
   const estProdMap = new Map();
   let validatedProductArray = [];
 
