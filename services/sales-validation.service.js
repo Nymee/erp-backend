@@ -1,12 +1,13 @@
 const Product = require("../models/Product");
 const validateProduct = require("./product-validation.service");
 
-async function validateSales(salesProducts) {
+async function validateWithProductData(salesProducts) {
   //you redeclared salesProducts
   const salesProductIds = salesProducts.map((p) => p.product_id);
   const originalProducts = await Product.find({
     _id: { $in: salesProductIds }, //comparison by value not by reference
-  }); //you forgot await
+  }).lean(); //you forgot await
+
   let validatedProductArray = [];
 
   if (originalProducts && originalProducts.length > 0) {
@@ -18,26 +19,45 @@ async function validateSales(salesProducts) {
     }
 
     for (const original of originalProducts) {
-      let currentProd = salesProductsMap.get(String(original._id)); // get uses strict equality ===.reference of objectids wont be same unless we convert to string. since string is primitive no reference and only value matter in ===.
-      if (currentProd) {
-        const prodToValidate = {
-          ...original.toObject(),
-          ...currentProd,
+      let currentSalesProd = salesProductsMap.get(String(original._id)); // get uses strict equality ===.reference of objectids wont be same unless we convert to string. since string is primitive no reference and hence only value matters in ===.
+      if (currentSalesProd) {
+        const originalProdDetails = {
+          min_margin: original.min_margin,
+          max_margin: original.max_margin,
+          margin_unit: original.margin_unit,
+          gst: original.gst,
+          cess: original.cess,
         };
+
+        const prodToValidate = {
+          ...originalProdDetails,
+          ...currentSalesProd,
+        };
+
         try {
           const result = validateProduct(prodToValidate, "sales");
+          if (result) {
+            validatedProductArray.push(result);
+          }
         } catch (err) {
           throw new Error(
             `Validation failed for product ${original._id}: ${err.message}`
           );
         }
-        if (result) {
-          validatedProductArray.push(result);
-        }
       }
+      calculateTotalSalesPrice(validateProductArray);
+      calculateGrandTotal(validatedProductArray);
     }
+  }
+
+  function calculateTotalSalesPrice() {}
+
+  function calculateGrandTotal(array) {
+    let grandTotal = 0;
   }
   return validatedProductArray;
 }
+
+function validateWithSalesData(salesProducts) {}
 
 module.exports = validateSales;

@@ -14,7 +14,6 @@ const createProductSchema = Joi.object({
     then: Joi.string().valid("per", "rup").required(),
     otherwise: Joi.forbidden(),
   }),
-  discount_price: Joi.number().required(),
   gst: Joi.number().optional(),
   cess: Joi.number().optional(),
   sales_price: Joi.number().required(),

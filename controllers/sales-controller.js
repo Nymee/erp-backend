@@ -11,16 +11,13 @@ const createSales = async (req, res, next) => {
   }
 };
 
-const updateSales = async(req, res, next)=>{
-  try{
+const updateSales = async (req, res, next) => {
+  try {
     const salesInfo = req.body;
     const salesProducts = req.body.products;
     const value = validateSales(salesProducts);
 
-    if(value){
-      
+    if (value) {
     }
-
-
-  }
-}
+  } catch (err) {}
+};
