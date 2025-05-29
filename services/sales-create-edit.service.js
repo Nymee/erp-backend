@@ -10,12 +10,12 @@ async function updateSalesWorkflow(body, sales_id) {
   const price_update = salesInfo.price_update;
   const so_discount = salesInfo.so_discount;
   const so_discount_type = salesInfo.so_discount_type;
-  const so_discount_amount = 0;
+  let so_discount_amount = 0;
   let grand_total_before_so_discount = 0;
   let grand_total = 0;
-  let existingProductsResult = [];
 
-  const estimationInfo = await Sales.findById(salesId).lean();
+  const estimation = await Sales.findById(salesId);
+  const estimationInfo = await estimation.lean();
   if (!estimationInfo) {
     throw new Error("Estimation not found.");
   }
@@ -24,23 +24,23 @@ async function updateSalesWorkflow(body, sales_id) {
   const existingProducts = updated?.map((u) => u.to) || [];
 
   if (price_update) {
-    existingProductsResult = existingProducts.length
+    let existingValidated = existingProducts.length
       ? await validateWithProductData(existingProducts)
       : [];
   } else {
-    existingProductsResult = existingProducts.length
-      ? await validateWithSalesData(existingProducts)
+    let existingValidated = existingProducts.length
+      ? await validateWithSalesData(existingProducts, estProds)
       : [];
   }
 
-  let newProductsResult = newProducts
-    ? await validateWithProductData(salesProducts)
+  let newValidated = newProducts.length
+    ? await validateWithProductData(newProducts)
     : [];
 
-  let productList = [...existingProductsResult, ...newProductsResult];
+  let productList = [...existingValidated, ...newValidated];
 
   if (productList.length) {
-    grand_total_before_so_discount = calculateGrandTotal(productList);
+    grand_total_before_so_discount = grandTotalBeforeSoDiscount(productList);
     if (so_discount) {
       so_discount_amount = calculateSODiscountAmount(
         so_discount,
@@ -50,10 +50,15 @@ async function updateSalesWorkflow(body, sales_id) {
 
       grand_total = grand_total_before_so_discount - so_discount_amount;
     }
-
-    if (price_update) result = await validateWithProductData(existingProducts);
-    else result = await validateWithSalesData(salesProducts, estProds);
   }
+  Object.assign(estimation, {
+    products: productList,
+    so_discount_amount: so_discount_amount,
+    grand_total_before_so_discount: grand_total_before_so_discount,
+    grand_total: grand_total,
+  });
+
+  return estimation;
 }
 
 async function validateWithProductData(salesProducts) {
@@ -70,11 +75,11 @@ async function validateWithProductData(salesProducts) {
     const salesProductsMap = new Map();
     for (const product of salesProducts) {
       // you wrote in instead of of
-      salesProductsMap.set(String(product.product_id), product);
+      salesProductsMap.set(product.product_id.toString(), product);
     }
 
     for (const original of originalProducts) {
-      let currentSalesProd = salesProductsMap.get(String(original._id)); // get uses strict equality ===.reference of objectids wont be same unless we convert to string. since string is primitive no reference and hence only value matters in ===.
+      let currentSalesProd = salesProductsMap.get(original._id.toString()); // get uses strict equality ===.reference of objectids wont be same unless we convert to string. since string is primitive no reference and hence only value matters in ===.
       if (currentSalesProd) {
         const originalProdDetails = {
           min_margin: original.min_margin,
@@ -106,25 +111,24 @@ async function validateWithProductData(salesProducts) {
 }
 
 async function validateWithSalesData(salesProducts, estProds) {
-  const estProdMap = new Map();
   let validatedProductsArray = [];
-
-  for (const prod of estProds) {
-    estProdMap.set(String(prod.product_id), prod);
-  }
+  const estProdMap = new Map(estProds.map((p) => [String(p.product_id), p]));
 
   for (const product of salesProducts) {
-    const currentEstProd = estProdMap.get(String(product.product_id));
-    const currentEstProdDetails = {
-      min_margin: currentEstProd.min_margin,
-      max_margin: currentEstProd.max_margin,
-      margin_unit: currentEstProd.margin_unit,
-      gst: currentEstProd.gst,
-      cess: currentEstProd.cess,
+    const current = estProdMap.get(String(product.product_id));
+    if (!current) continue;
+
+    const estProdDetails = {
+      min_margin: current.min_margin,
+      max_margin: current.max_margin,
+      margin_unit: current.margin_unit,
+      gst: current.gst,
+      cess: current.cess,
     };
+
     const prodToValidate = {
       ...product,
-      ...currentEstProdDetails,
+      ...estProdDetails,
     };
 
     try {
@@ -142,7 +146,7 @@ async function validateWithSalesData(salesProducts, estProds) {
   return validatedProductsArray;
 }
 
-function calculateGrandTotal(productsArray) {
+function grandTotalBeforeSoDiscount(productsArray) {
   let grand_total_before_so_discount = productsArray.reduce((sum, product) => {
     return sum + (product.total_sales_price || 0);
   }, 0);
@@ -157,16 +161,18 @@ function calculateSODiscountAmount(
 ) {
   let so_discount_amount;
   if (so_discount_type === "per") {
-    so_discount_amount =
-      grand_total_before - (grand_total_before * so_discount) / 100;
+    so_discount_amount = (grand_total_before * so_discount) / 100;
   } else if (so_discount_type === "rup") {
-    so_discount_amount = grand_total_before - so_discount;
-  } else throw new Error("Invalid SO Discount Type");
+    so_discount_amount = so_discount;
+  } else {
+    throw new Error("Invalid SO Discount Type");
+  }
+  return so_discount_amount;
 }
 
 module.exports = {
   validateWithProductData,
   validateWithSalesData,
-  calculateGrandTotal,
+  grandTotalBeforeSoDiscount,
   calculateSODiscountAmount,
 };

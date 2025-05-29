@@ -18,6 +18,17 @@ const createSales = async (req, res, next) => {
 
 const updateSales = async (req, res, next) => {
   try {
-    const data = updateSalesWorkFlow(req.body, req.params.sales_id);
-  } catch (err) {}
+    const estimation = await updateSalesWorkFlow(req.body, req.params.sales_id);
+
+    await estimation.save();
+
+    res
+      .status(200)
+      .json({
+        message: "Sales estimation has been updated successfully",
+        data: data.estimation,
+      });
+  } catch (err) {
+    next(err);
+  }
 };
