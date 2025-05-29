@@ -39,3 +39,5 @@ function diffProducts(existingProducts, incomingProducts) {
 
   return { added, removed, updated };
 }
+
+module.exports = { diffProducts };

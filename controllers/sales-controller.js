@@ -2,7 +2,9 @@ const Sales = require("'../models/Sales");
 const {
   validateWithProductData,
   validateWithSalesData,
-} = require("../services/sales-validation.service");
+  calculateGrandTotal,
+  calculateSODiscountAmount,
+} = require("../services/sales-create-edit.service");
 
 const createSales = async (req, res, next) => {
   try {
@@ -16,27 +18,17 @@ const createSales = async (req, res, next) => {
 
 const updateSales = async (req, res, next) => {
   try {
-    const salesInfo = req.body;
-    const salesId = req.params.sales_id;
-    const salesProducts = salesInfo.products;
-    const price_update = salesInfo.price_update;
+    const estimation = await updateSalesWorkFlow(req.body, req.params.sales_id);
 
-    const estimationInfo = await Sales.findById(salesId).lean();
-    if (!estimationInfo) {
-      throw new Error("Estimation not found.");
-    }
-    const estProds = estimationInfo.products;
-    const { added: newProducts, updated } = diffProducts(
-      estimationInfo.products,
-      salesProducts
-    );
-    const existingProducts = updated.map((u) => u.to);
-    const newProdResult = await validateWithProductData(salesProducts);
+    await estimation.save();
 
-    if (price_update) result = await validateWithProductData(existingProducts);
-    else result = await validateWithSalesData(salesProducts, estProds);
-
-    if (value) {
-    }
-  } catch (err) {}
+    res
+      .status(200)
+      .json({
+        message: "Sales estimation has been updated successfully",
+        data: data.estimation,
+      });
+  } catch (err) {
+    next(err);
+  }
 };
