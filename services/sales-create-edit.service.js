@@ -3,6 +3,35 @@ const validateProduct = require("./product-validation.service");
 const Sales = require("../models/Sales");
 const { diffProducts } = require("./sales-product-diffing.service");
 
+async function createSalesWorkFlow(body) {
+  const salesProducts = body.products;
+  const so_discount = body.so_discount;
+  const so_discount_type = body.so_discount_type;
+
+  let soResult = {
+    so_discount_amount: 0,
+    grand_total_before_so_discount: 0,
+    grand_total: 0,
+  };
+  const productList = validateWithProductData(salesProducts);
+
+  if (productList.length) {
+    soResult = applySODiscount(productList, so_discount, so_discount_type);
+  }
+  const last_refreshed = Math.floor(Date.now() / 1000);
+  const expires_at = last_refreshed + 7 * 24 * 60 * 60;
+
+  const data = {
+    ...body,
+    products: productList,
+    last_refreshed,
+    expires_at,
+    ...soResult,
+  };
+
+  return data;
+}
+
 async function updateSalesWorkflow(body, sales_id) {
   const salesInfo = body;
   const salesId = sales_id;
@@ -10,9 +39,12 @@ async function updateSalesWorkflow(body, sales_id) {
   const price_update = salesInfo.price_update;
   const so_discount = salesInfo.so_discount;
   const so_discount_type = salesInfo.so_discount_type;
-  let so_discount_amount = 0;
-  let grand_total_before_so_discount = 0;
-  let grand_total = 0;
+  let soResult = {
+    so_discount_amount: 0,
+    grand_total_before_so_discount: 0,
+    grand_total: 0,
+  };
+  let existingValidated = [];
 
   const estimation = await Sales.findById(salesId);
   const estimationInfo = await estimation.lean();
@@ -24,38 +56,29 @@ async function updateSalesWorkflow(body, sales_id) {
   const existingProducts = updated?.map((u) => u.to) || [];
 
   if (price_update) {
-    let existingValidated = existingProducts.length
+    existingValidated = existingProducts.length
       ? await validateWithProductData(existingProducts)
       : [];
   } else {
-    let existingValidated = existingProducts.length
+    existingValidated = existingProducts.length
       ? await validateWithSalesData(existingProducts, estProds)
       : [];
   }
 
-  let newValidated = newProducts.length
+  const newValidated = newProducts.length
     ? await validateWithProductData(newProducts)
     : [];
 
-  let productList = [...existingValidated, ...newValidated];
+  const productList = [...existingValidated, ...newValidated];
 
   if (productList.length) {
-    grand_total_before_so_discount = grandTotalBeforeSoDiscount(productList);
-    if (so_discount) {
-      so_discount_amount = calculateSODiscountAmount(
-        so_discount,
-        so_discount_type,
-        grand_total_before_so_discount
-      );
-
-      grand_total = grand_total_before_so_discount - so_discount_amount;
-    }
+    soResult = applySODiscount(productList, so_discount, so_discount_type);
   }
   Object.assign(estimation, {
     products: productList,
-    so_discount_amount: so_discount_amount,
-    grand_total_before_so_discount: grand_total_before_so_discount,
-    grand_total: grand_total,
+    so_discount_amount: soResult.so_discount_amount,
+    grand_total_before_so_discount: soResult.grand_total_before_so_discount,
+    grand_total: soResult.grand_total,
   });
 
   return estimation;
@@ -146,6 +169,27 @@ async function validateWithSalesData(salesProducts, estProds) {
   return validatedProductsArray;
 }
 
+function applySODiscount(products, so_discount, so_discount_type) {
+  const grand_total_before_so_discount = grandTotalBeforeSoDiscount(products);
+  let so_discount_amount = 0;
+  let grand_total = grand_total_before_so_discount;
+
+  if (so_discount) {
+    so_discount_amount = calculateSODiscountAmount(
+      so_discount,
+      so_discount_type,
+      grand_total_before_so_discount
+    );
+    grand_total = grand_total_before_so_discount - so_discount_amount;
+  }
+
+  return {
+    grand_total_before_so_discount,
+    so_discount_amount,
+    grand_total,
+  };
+}
+
 function grandTotalBeforeSoDiscount(productsArray) {
   let grand_total_before_so_discount = productsArray.reduce((sum, product) => {
     return sum + (product.total_sales_price || 0);
@@ -175,4 +219,6 @@ module.exports = {
   validateWithSalesData,
   grandTotalBeforeSoDiscount,
   calculateSODiscountAmount,
+  createSalesWorkFlow,
+  updateSalesWorkflow,
 };
