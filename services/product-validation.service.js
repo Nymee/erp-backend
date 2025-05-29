@@ -9,6 +9,7 @@ function validateProduct(product, context) {
   const margin_unit = product.margin_unit;
   const gst = Number(product.gst ?? 0);
   const cess = Number(product.cess ?? 0);
+  const quantity = Number(product.quantity ?? 1);
 
   const retail_margin_unit =
     context === "products" ? margin_unit : retail_margin_type;
@@ -75,16 +76,39 @@ function validateProduct(product, context) {
     (discountPrice + (discountPrice * totalTaxRate) / 100).toFixed(2)
   );
 
-  return {
-    values: {
-      min_margin_price: minMarginPrice,
-      max_margin_price: maxMarginPrice,
-      retail_margin_price: retailMarginPrice,
-      discount_amount: discountAmt,
-      discount_price: discountPrice,
-      sales_price: salesPrice,
-    },
-  };
+  if (context == "product") {
+    return {
+      values: {
+        min_margin_price: minMarginPrice,
+        max_margin_price: maxMarginPrice,
+        retail_margin_price: retailMarginPrice,
+        discount_amount: discountAmt,
+        discount_price: discountPrice,
+        sales_price: salesPrice,
+      },
+    };
+  } else if (context == "sales") {
+    return {
+      values: {
+        cost_price: cost_price,
+        min_margin: min_margin,
+        max_margin: max_margin,
+        margin_unit: margin_unit,
+
+        retail_margin: retail_margin,
+        retail_margin_type: retail_margin_type,
+
+        discount: discount,
+        discount_type: discount_type,
+
+        gst: gst,
+        cess: cess,
+        sales_price: salesPrice,
+
+        total_sales_price: salesPrice * quantity,
+      },
+    };
+  }
 }
 
 module.exports = validateProduct;
