@@ -7,17 +7,17 @@ async function createSalesWorkFlow(body) {
   const salesProducts = body.products;
   const so_discount = body.so_discount;
   const so_discount_type = body.so_discount_type;
-
   let soResult = {
     so_discount_amount: 0,
     grand_total_before_so_discount: 0,
     grand_total: 0,
   };
+
   let productList = validateWithProductData(salesProducts);
   const last_refresh = Math.floor(Date.now() / 1000);
   const expiry = last_refresh + 7 * 24 * 60 * 60;
   productList = productList.map((prod) => {
-    return { ...productList, last_refresh, expiry: expiry };
+    return { ...prod, last_refresh, expiry: expiry };
   });
 
   if (productList.length) {
@@ -51,18 +51,16 @@ async function updateSalesWorkflow(body, sales_id) {
     throw new Error("Estimation not found.");
   }
   const estProds = estimationInfo.products;
-  const { newOrRefreshed: newProducts, updated } = diffProducts(
+  const { newOrRefreshed, updated: existingProducts } = diffProducts(
     estProds,
     salesProducts
   );
-  const existingProducts = updated?.map((u) => u.to) || [];
-
   const existingValidated = existingProducts.length
     ? await validateWithSalesData(existingProducts, estProds)
     : [];
 
-  const newOrRefreshedValidated = newProducts.length
-    ? await validateWithProductData(newProducts)
+  const newOrRefreshedValidated = newOrRefreshed.length
+    ? await validateWithProductData(newOrRefreshed)
     : [];
 
   const productList = [...existingValidated, ...newOrRefreshedValidated];
