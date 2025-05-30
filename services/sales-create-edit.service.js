@@ -13,19 +13,20 @@ async function createSalesWorkFlow(body) {
     grand_total_before_so_discount: 0,
     grand_total: 0,
   };
-  const productList = validateWithProductData(salesProducts);
+  let productList = validateWithProductData(salesProducts);
+  const last_refresh = Math.floor(Date.now() / 1000);
+  const expiry = last_refresh + 7 * 24 * 60 * 60;
+  productList = productList.map((prod) => {
+    return { ...productList, last_refresh, expiry: expiry };
+  });
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
   }
-  const last_refreshed = Math.floor(Date.now() / 1000);
-  const expires_at = last_refreshed + 7 * 24 * 60 * 60;
 
   const data = {
     ...body,
     products: productList,
-    last_refreshed,
-    expires_at,
     ...soResult,
   };
 
@@ -36,7 +37,6 @@ async function updateSalesWorkflow(body, sales_id) {
   const salesInfo = body;
   const salesId = sales_id;
   const salesProducts = salesInfo.products;
-  const price_update = salesInfo.price_update;
   const so_discount = salesInfo.so_discount;
   const so_discount_type = salesInfo.so_discount_type;
   let soResult = {
@@ -44,7 +44,6 @@ async function updateSalesWorkflow(body, sales_id) {
     grand_total_before_so_discount: 0,
     grand_total: 0,
   };
-  let existingValidated = [];
 
   const estimation = await Sales.findById(salesId);
   const estimationInfo = await estimation.lean();
@@ -52,24 +51,21 @@ async function updateSalesWorkflow(body, sales_id) {
     throw new Error("Estimation not found.");
   }
   const estProds = estimationInfo.products;
-  const { added: newProducts, updated } = diffProducts(estProds, salesProducts);
+  const { newOrRefreshed: newProducts, updated } = diffProducts(
+    estProds,
+    salesProducts
+  );
   const existingProducts = updated?.map((u) => u.to) || [];
 
-  if (price_update) {
-    existingValidated = existingProducts.length
-      ? await validateWithProductData(existingProducts)
-      : [];
-  } else {
-    existingValidated = existingProducts.length
-      ? await validateWithSalesData(existingProducts, estProds)
-      : [];
-  }
+  const existingValidated = existingProducts.length
+    ? await validateWithSalesData(existingProducts, estProds)
+    : [];
 
-  const newValidated = newProducts.length
+  const newOrRefreshedValidated = newProducts.length
     ? await validateWithProductData(newProducts)
     : [];
 
-  const productList = [...existingValidated, ...newValidated];
+  const productList = [...existingValidated, ...newOrRefreshedValidated];
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
@@ -141,6 +137,8 @@ async function validateWithSalesData(salesProducts, estProds) {
     const current = estProdMap.get(String(product.product_id));
     if (!current) continue;
 
+    const last_refresh = current.last_refresh;
+    const expiry = current.expiry;
     const estProdDetails = {
       min_margin: current.min_margin,
       max_margin: current.max_margin,
@@ -157,7 +155,8 @@ async function validateWithSalesData(salesProducts, estProds) {
     try {
       const result = validateProduct(prodToValidate, "sales");
       if (result) {
-        validatedProductsArray.push(result);
+        const finalResult = { ...result, last_refresh, expiry };
+        validatedProductsArray.push(finalResult);
       }
     } catch (err) {
       throw new Error(

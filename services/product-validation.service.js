@@ -106,6 +106,8 @@ function validateProduct(product, context) {
         sales_price: salesPrice,
 
         total_sales_price: salesPrice * quantity,
+        last_refreshed: Math.floor(Date.now() / 1000),
+        expires_at: last_refreshed + 7 * 24 * 60 * 60,
       },
     };
   }

@@ -1,7 +1,7 @@
 const Sales = require("'../models/Sales");
 const {
-  validateWithProductData,
   createSalesWorkFlow,
+  updateSalesWorkflow,
 } = require("../services/sales-create-edit.service");
 
 const createSales = async (req, res, next) => {
@@ -18,7 +18,7 @@ const createSales = async (req, res, next) => {
 
 const updateSales = async (req, res, next) => {
   try {
-    const estimation = await updateSalesWorkFlow(req.body, req.params.sales_id);
+    const estimation = await updateSalesWorkflow(req.body, req.params.sales_id);
 
     await estimation.save();
 
