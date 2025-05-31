@@ -14,11 +14,6 @@ async function createSalesWorkFlow(body) {
   };
 
   let productList = validateWithProductData(salesProducts);
-  const last_refresh = Math.floor(Date.now() / 1000);
-  const expiry = last_refresh + 7 * 24 * 60 * 60;
-  productList = productList.map((prod) => {
-    return { ...prod, last_refresh, expiry: expiry };
-  });
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
@@ -86,6 +81,8 @@ async function validateWithProductData(salesProducts) {
   }).lean(); //you forgot await
 
   let validatedProductsArray = [];
+  const last_refresh = Math.floor(Date.now() / 1000);
+  const expiry = last_refresh + 7 * 24 * 60 * 60;
 
   if (originalProducts && originalProducts.length > 0) {
     //you forgot to check length
@@ -114,6 +111,7 @@ async function validateWithProductData(salesProducts) {
         try {
           const result = validateProduct(prodToValidate, "sales");
           if (result) {
+            const result = { ...result, last_refresh, expiry };
             validatedProductsArray.push(result);
           }
         } catch (err) {
