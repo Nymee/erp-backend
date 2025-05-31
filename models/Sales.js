@@ -10,6 +10,7 @@ const salesSchema = new mongoose.Schema({
 
 const salesProductSchema = new mongoose.Schema(
   {
+    productId: { type: mongoose.Schema.Types.ObjectId, required: true },
     quantity: { type: Number, required: true },
     retail_margin: { type: Number, required: true },
     retail_margin_type: { type: String, required: true, enum: ["per", "rup"] },
@@ -19,6 +20,8 @@ const salesProductSchema = new mongoose.Schema(
       enum: ["per", "rup"],
       optional: true,
     },
+    last_refresh: { type: Number, required: true },
+    expiry: { type: Number, required: true },
   },
   { _id: false }
 );

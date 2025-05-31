@@ -106,6 +106,7 @@ function validateProduct(product, context) {
         sales_price: salesPrice,
 
         total_sales_price: salesPrice * quantity,
+        quantity: quantity,
       },
     };
   }

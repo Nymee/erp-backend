@@ -1,6 +1,6 @@
 function diffProducts(existingProducts, incomingProducts) {
   const existingMap = new Map();
-  const added = [];
+  const newOrRefreshed = [];
   const removed = [];
   const updated = [];
 
@@ -15,21 +15,16 @@ function diffProducts(existingProducts, incomingProducts) {
     const existing = existingMap.get(id);
 
     if (!existing) {
-      added.push(incoming);
+      newOrRefreshed.push(incoming);
     } else {
-      const isModified =
-        incoming.quantity !== existing.quantity ||
-        incoming.client_margin !== existing.client_margin ||
-        incoming.client_margin_type !== existing.client_margin_type ||
-        incoming.discount !== existing.discount ||
-        incoming.discount_type !== existing.discount_type;
-
-      if (isModified) {
-        updated.push({ from: existing, to: incoming });
+      const isRefreshed = incoming.price_update == true;
+      if (isRefreshed) {
+        newOrRefreshed.push(incoming);
+      } else {
+        updated.push(incoming);
       }
-
-      existingMap.delete(id); // Mark as processed
     }
+    existingMap.delete(id); // Mark as processed
   }
 
   // Anything still in existingMap was removed
@@ -37,7 +32,7 @@ function diffProducts(existingProducts, incomingProducts) {
     removed.push(removedProduct);
   }
 
-  return { added, removed, updated };
+  return { newOrRefreshed, removed, updated };
 }
 
 module.exports = { diffProducts };

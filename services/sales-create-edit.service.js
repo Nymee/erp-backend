@@ -3,59 +3,93 @@ const validateProduct = require("./product-validation.service");
 const Sales = require("../models/Sales");
 const { diffProducts } = require("./sales-product-diffing.service");
 
+async function createSalesWorkFlow(body) {
+  const salesProducts = body.products;
+  const so_discount = body.so_discount;
+  const so_discount_type = body.so_discount_type;
+  let soResult = {
+    so_discount_amount: 0,
+    grand_total_before_so_discount: 0,
+    grand_total: 0,
+  };
+
+  let productList = await validateWithProductData(salesProducts);
+  if (!productList.length) {
+    throw new Error("No valid products found in sales request.");
+  }
+
+  if (productList.length) {
+    soResult = applySODiscount(productList, so_discount, so_discount_type);
+  }
+
+  const data = {
+    ...body,
+    products: productList,
+    ...soResult,
+  };
+
+  return data;
+}
+
 async function updateSalesWorkflow(body, sales_id) {
   const salesInfo = body;
   const salesId = sales_id;
   const salesProducts = salesInfo.products;
-  const price_update = salesInfo.price_update;
+  const type = salesInfo.type;
   const so_discount = salesInfo.so_discount;
   const so_discount_type = salesInfo.so_discount_type;
-  let so_discount_amount = 0;
-  let grand_total_before_so_discount = 0;
-  let grand_total = 0;
+  let soResult = {
+    so_discount_amount: 0,
+    grand_total_before_so_discount: 0,
+    grand_total: 0,
+  };
 
   const estimation = await Sales.findById(salesId);
   const estimationInfo = await estimation.lean();
+
   if (!estimationInfo) {
     throw new Error("Estimation not found.");
   }
-  const estProds = estimationInfo.products;
-  const { added: newProducts, updated } = diffProducts(estProds, salesProducts);
-  const existingProducts = updated?.map((u) => u.to) || [];
-
-  if (price_update) {
-    let existingValidated = existingProducts.length
-      ? await validateWithProductData(existingProducts)
-      : [];
-  } else {
-    let existingValidated = existingProducts.length
-      ? await validateWithSalesData(existingProducts, estProds)
-      : [];
+  if (estimationInfo.type === "order") {
+    const error = new Error("Order can't be edited");
+    error.status = 400;
+    throw error;
   }
+  const estProds = estimationInfo.products;
+  const { newOrRefreshed, updated: existingProducts } = diffProducts(
+    estProds,
+    salesProducts
+  );
 
-  let newValidated = newProducts.length
-    ? await validateWithProductData(newProducts)
+  const { expired, expiredProducts } = checkExpiry(existingProducts);
+  if (expired) {
+    const error = new Error(
+      `The following products have expired and must be refreshed: ${expiredProducts
+        .map((p) => p.product_id)
+        .join(", ")}`
+    );
+    error.status = 400;
+    throw error;
+  }
+  const existingValidated = existingProducts.length
+    ? await validateWithSalesData(existingProducts, estProds)
     : [];
 
-  let productList = [...existingValidated, ...newValidated];
+  const newOrRefreshedValidated = newOrRefreshed.length
+    ? await validateWithProductData(newOrRefreshed)
+    : [];
+
+  const productList = [...existingValidated, ...newOrRefreshedValidated];
 
   if (productList.length) {
-    grand_total_before_so_discount = grandTotalBeforeSoDiscount(productList);
-    if (so_discount) {
-      so_discount_amount = calculateSODiscountAmount(
-        so_discount,
-        so_discount_type,
-        grand_total_before_so_discount
-      );
-
-      grand_total = grand_total_before_so_discount - so_discount_amount;
-    }
+    soResult = applySODiscount(productList, so_discount, so_discount_type);
   }
   Object.assign(estimation, {
     products: productList,
-    so_discount_amount: so_discount_amount,
-    grand_total_before_so_discount: grand_total_before_so_discount,
-    grand_total: grand_total,
+    so_discount_amount: soResult.so_discount_amount,
+    grand_total_before_so_discount: soResult.grand_total_before_so_discount,
+    grand_total: soResult.grand_total,
+    type: type,
   });
 
   return estimation;
@@ -69,6 +103,8 @@ async function validateWithProductData(salesProducts) {
   }).lean(); //you forgot await
 
   let validatedProductsArray = [];
+  const last_refresh = Math.floor(Date.now() / 1000);
+  const expiry = last_refresh + 7 * 24 * 60 * 60;
 
   if (originalProducts && originalProducts.length > 0) {
     //you forgot to check length
@@ -97,7 +133,8 @@ async function validateWithProductData(salesProducts) {
         try {
           const result = validateProduct(prodToValidate, "sales");
           if (result) {
-            validatedProductsArray.push(result);
+            const finalResult = { ...result, last_refresh, expiry };
+            validatedProductsArray.push(finalResult);
           }
         } catch (err) {
           throw new Error(
@@ -118,6 +155,8 @@ async function validateWithSalesData(salesProducts, estProds) {
     const current = estProdMap.get(String(product.product_id));
     if (!current) continue;
 
+    const last_refresh = current.last_refresh;
+    const expiry = current.expiry;
     const estProdDetails = {
       min_margin: current.min_margin,
       max_margin: current.max_margin,
@@ -127,14 +166,15 @@ async function validateWithSalesData(salesProducts, estProds) {
     };
 
     const prodToValidate = {
-      ...product,
       ...estProdDetails,
+      ...product,
     };
 
     try {
       const result = validateProduct(prodToValidate, "sales");
       if (result) {
-        validatedProductsArray.push(result);
+        const finalResult = { ...result, last_refresh, expiry };
+        validatedProductsArray.push(finalResult);
       }
     } catch (err) {
       throw new Error(
@@ -144,6 +184,27 @@ async function validateWithSalesData(salesProducts, estProds) {
   }
 
   return validatedProductsArray;
+}
+
+function applySODiscount(products, so_discount, so_discount_type) {
+  const grand_total_before_so_discount = grandTotalBeforeSoDiscount(products);
+  let so_discount_amount = 0;
+  let grand_total = grand_total_before_so_discount;
+
+  if (so_discount) {
+    so_discount_amount = calculateSODiscountAmount(
+      so_discount,
+      so_discount_type,
+      grand_total_before_so_discount
+    );
+    grand_total = grand_total_before_so_discount - so_discount_amount;
+  }
+
+  return {
+    grand_total_before_so_discount,
+    so_discount_amount,
+    grand_total,
+  };
 }
 
 function grandTotalBeforeSoDiscount(productsArray) {
@@ -170,9 +231,32 @@ function calculateSODiscountAmount(
   return so_discount_amount;
 }
 
+function checkExpiry(products) {
+  const now = Math.floor(Date.now() / 1000);
+  let expiredProducts = [];
+  products.forEach((prod) => {
+    if (prod.expiry <= now) {
+      expiredProducts.push(prod);
+    }
+  });
+
+  if (expiredProducts && expiredProducts.length > 0) {
+    return {
+      expired: true,
+      expiredProducts,
+    };
+  } else
+    return {
+      expired: false,
+      expiredProducts,
+    };
+}
+
 module.exports = {
   validateWithProductData,
   validateWithSalesData,
   grandTotalBeforeSoDiscount,
   calculateSODiscountAmount,
+  createSalesWorkFlow,
+  updateSalesWorkflow,
 };
