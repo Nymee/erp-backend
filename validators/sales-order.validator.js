@@ -50,7 +50,8 @@ const updateSOE = Joi.object({
   products: Joi.array().items(salesProductSchema).optional(),
   so_discount: Joi.number().optional(),
   so_discount_type: Joi.number().optional(),
-  type: Joi.string().valid("order", "estimation").optional(),
+  type: Joi.string().valid("order", "estimation").required(),
+  price_update: Joi.boolean().required(),
 })
   .unknown(false)
   .custom((value, helpers) => {

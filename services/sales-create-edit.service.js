@@ -13,7 +13,10 @@ async function createSalesWorkFlow(body) {
     grand_total: 0,
   };
 
-  let productList = validateWithProductData(salesProducts);
+  let productList = await validateWithProductData(salesProducts);
+  if (!productList.length) {
+    throw new Error("No valid products found in sales request.");
+  }
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
@@ -32,6 +35,7 @@ async function updateSalesWorkflow(body, sales_id) {
   const salesInfo = body;
   const salesId = sales_id;
   const salesProducts = salesInfo.products;
+  const type = salesInfo.type;
   const so_discount = salesInfo.so_discount;
   const so_discount_type = salesInfo.so_discount_type;
   let soResult = {
@@ -42,14 +46,31 @@ async function updateSalesWorkflow(body, sales_id) {
 
   const estimation = await Sales.findById(salesId);
   const estimationInfo = await estimation.lean();
+
   if (!estimationInfo) {
     throw new Error("Estimation not found.");
+  }
+  if (estimationInfo.type === "order") {
+    const error = new Error("Order can't be edited");
+    error.status = 400;
+    throw error;
   }
   const estProds = estimationInfo.products;
   const { newOrRefreshed, updated: existingProducts } = diffProducts(
     estProds,
     salesProducts
   );
+
+  const { expired, expiredProducts } = checkExpiry(existingProducts);
+  if (expired) {
+    const error = new Error(
+      `The following products have expired and must be refreshed: ${expiredProducts
+        .map((p) => p.product_id)
+        .join(", ")}`
+    );
+    error.status = 400;
+    throw error;
+  }
   const existingValidated = existingProducts.length
     ? await validateWithSalesData(existingProducts, estProds)
     : [];
@@ -68,6 +89,7 @@ async function updateSalesWorkflow(body, sales_id) {
     so_discount_amount: soResult.so_discount_amount,
     grand_total_before_so_discount: soResult.grand_total_before_so_discount,
     grand_total: soResult.grand_total,
+    type: type,
   });
 
   return estimation;
@@ -111,8 +133,8 @@ async function validateWithProductData(salesProducts) {
         try {
           const result = validateProduct(prodToValidate, "sales");
           if (result) {
-            const result = { ...result, last_refresh, expiry };
-            validatedProductsArray.push(result);
+            const finalResult = { ...result, last_refresh, expiry };
+            validatedProductsArray.push(finalResult);
           }
         } catch (err) {
           throw new Error(
@@ -144,8 +166,8 @@ async function validateWithSalesData(salesProducts, estProds) {
     };
 
     const prodToValidate = {
-      ...product,
       ...estProdDetails,
+      ...product,
     };
 
     try {
@@ -207,6 +229,27 @@ function calculateSODiscountAmount(
     throw new Error("Invalid SO Discount Type");
   }
   return so_discount_amount;
+}
+
+function checkExpiry(products) {
+  const now = Math.floor(Date.now() / 1000);
+  let expiredProducts = [];
+  products.forEach((prod) => {
+    if (prod.expiry <= now) {
+      expiredProducts.push(prod);
+    }
+  });
+
+  if (expiredProducts && expiredProducts.length > 0) {
+    return {
+      expired: true,
+      expiredProducts,
+    };
+  } else
+    return {
+      expired: false,
+      expiredProducts,
+    };
 }
 
 module.exports = {
