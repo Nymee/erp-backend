@@ -20,6 +20,10 @@ async function createSalesWorkFlow(body) {
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
+    productList = findSingleProductAmount(
+      productList,
+      soResult.so_discount_amount
+    );
   }
 
   const data = {
@@ -83,6 +87,10 @@ async function updateSalesWorkflow(body, sales_id) {
 
   if (productList.length) {
     soResult = applySODiscount(productList, so_discount, so_discount_type);
+    productList = findSingleProductAmount(
+      productList,
+      soResult.so_discount_amount
+    );
   }
   Object.assign(estimation, {
     products: productList,
@@ -250,6 +258,24 @@ function checkExpiry(products) {
       expired: false,
       expiredProducts,
     };
+}
+
+function findSingleProductAmount(productList, so_discount_amount) {
+  const totalSalesPrice = productList.reduce(
+    (sum, product) => sum + product.sales_price,
+    0
+  );
+
+  if (totalSalesPrice === 0) return productList; // Avoid division by zero
+
+  return productList.map((product) => {
+    const ratio = product.sales_price / totalSalesPrice;
+    const shareOfDiscount = so_discount_amount * ratio;
+    return {
+      ...product,
+      single_product_final_amount: product.sales_price - shareOfDiscount,
+    };
+  });
 }
 
 module.exports = {
