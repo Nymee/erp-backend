@@ -35,7 +35,7 @@ const updateSales = async (req, res, next) => {
 
 const dispatchProducts = async (req, res, next) => {
   try {
-    const invoice = await dispatchProductsFlow(req.body);
+    const invoice = await createInvoice(req.body);
   } catch (err) {
     next(err);
   }

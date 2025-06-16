@@ -2,7 +2,7 @@ const Joi = require("joi");
 const objectIdValidator = require("../utils/object-validator");
 
 const createInvoiceSchema = Joi.object({
-  sales_order_id: objectIdValidator("salesId"),
+  sales_id: objectIdValidator("salesId"),
   client_id: objectIdValidator("clientId"),
   products: Joi.array().items(invoiceProductSchema).min(1).required(),
   total_amount: Joi.number().min(0).required(),

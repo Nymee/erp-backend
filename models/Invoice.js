@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const dispatchSchema = new mongoose.Schema(
   {
-    product_id: {
+    productId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Product",
@@ -20,7 +20,7 @@ const invoiceSchema = new mongoose.Schema(
       unique: true,
       ref: "Sales",
     },
-    client_id: {
+    clientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Client",
       required: true,

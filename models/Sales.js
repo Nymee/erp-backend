@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
 const salesSchema = new mongoose.Schema({
-  client_id: { type: String, required: true },
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Client",
+  },
   product: { type: [salesProductSchema], required: true },
   so_discount: { type: Number, required: true },
   so_discount_type: { type: String, required: true },
