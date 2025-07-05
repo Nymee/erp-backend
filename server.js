@@ -1,6 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/auth-routes");
 const companyRoutes = require("./routes/companyRoutes");
 const connectDB = require("./config/database");
 const productRoutes = require("./routes/productRoutes");
