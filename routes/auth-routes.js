@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.post(
   "/sign-up",
-  validate(createCompanySchema),
   authController.signupCompany
 );
 router.post("/login-in", verifyUser, authController.loginCompany);
