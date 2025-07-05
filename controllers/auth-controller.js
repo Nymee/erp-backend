@@ -16,7 +16,7 @@ const signupCompany = async (req, res) => {
       });
     } else
       res
-        .status(500)
+        signupCompany.status(500)
         .json({ message: "Something went wrong. Please try again later." });
   }
 };
