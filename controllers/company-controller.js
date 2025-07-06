@@ -51,15 +51,15 @@ const verifyCompany = async (req, res) => {
         companyId: company._id,
       });
 
-      await sendMail({
-        to: company.user_email,
-        subject: "Login Details - ERP",
-        text: `Your account has been created.\nEmail: ${company.user_email}\nTemporary Password: ${tempPassword}`,
-      });
+      // await sendMail({
+      //   to: company.user_email,
+      //   subject: "Login Details - ERP",
+      //   text: `Your account has been created.\nEmail: ${company.user_email}\nTemporary Password: ${tempPassword}`,
+      // });
     }
 
     res.status(200).json({ message: `Company ${verified} successfully.` });
-  } catch (err) {
+  } catch (err) { 
     console.error("Error in verifyCompany:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
