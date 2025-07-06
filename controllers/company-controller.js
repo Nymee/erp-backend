@@ -10,6 +10,7 @@ const verifyCompany = async (req, res) => {
     const { verified } = req.body; // "approved" or "rejected"
     const companyId = req.params.id;
 
+
     const company = await Company.findById(companyId);
     if (!company) {
       return res.status(404).json({ message: "Company does not exist" });
@@ -32,7 +33,7 @@ const verifyCompany = async (req, res) => {
       });
 
       await sendMail({
-        to: company.email,
+        to: company.email_id,
         subject: "Company Approved",
         text: `Hello ${company.name}, your company has been approved!`,
       });

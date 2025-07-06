@@ -15,8 +15,7 @@ const signupCompany = async (req, res) => {
         field: Object.keys(error.keyValue),
       });
     } else
-      res
-        signupCompany.status(500)
+      res.status(500)
         .json({ message: "Something went wrong. Please try again later." });
   }
 };

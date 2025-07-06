@@ -3,18 +3,19 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "maddison53@ethereal.email",
-    pass: "jn7jnAPss4f63QBp6D",
+    user: process.env.EMAIL,      // This matches your .env file
+    pass: process.env.EMAIL_PASS, // This matches your .env file
   },
 });
 
-const sendMail = async (to, subject, text) => {
+const sendMail = async (receipient_details, subject, text) => {
   try {
+    console.log("inside mail", to, process.env.EMAIL, process.env.EMAIL_PASS)
     await transporter.sendMail({
-      from: process.env.EMAIL,
-      to,
-      subject,
-      text,
+      from: process.env.EMAIL,  // This matches your .env file
+      to: receipient_details.to,
+      subject: receipient_details.subject,
+      text:receipient_details.text
     });
     console.log(`Mail sent to ${to}`);
   } catch (err) {
@@ -23,4 +24,4 @@ const sendMail = async (to, subject, text) => {
   }
 };
 
-module.exports = sendMail;
+module.exports = sendMail;  
