@@ -32,11 +32,11 @@ const verifyCompany = async (req, res) => {
         companyId: company._id,
       });
 
-      await sendMail({
-        to: company.email_id,
-        subject: "Company Approved",
-        text: `Hello ${company.name}, your company has been approved!`,
-      });
+      // await sendMail({
+      //   to: company.email_id,
+      //   subject: "Company Approved",
+      //   text: `Hello ${company.name}, your company has been approved!`,
+      // });
 
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -47,6 +47,7 @@ const verifyCompany = async (req, res) => {
         mobile: company.user_mobile,
         role: "SAU",
         password: hashedPassword,
+        temp_password: tempPassword,
         branchId: branch._id,
         companyId: company._id,
       });

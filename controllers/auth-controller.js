@@ -22,12 +22,13 @@ const signupCompany = async (req, res) => {
 
 const loginCompany = async (req, res) => {
   const user = req.user;
+  let token = '';
   if (user) {
-    const token = generateJWT(user);
+     token = generateJWT(user); 
   }
   res.status(200).json({
     message: "Login successful",
-    token,
+    token: token,
     user: {
       id: user._id,
       email: user.email,

@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     password: String,
+    temp_password: String
   },
   { timestamps: true }
 );

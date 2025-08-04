@@ -51,6 +51,13 @@ const updateUser = async (req, res, next) => {
 const createUser = async (req, res, next) => {
   try {
     const user = new User(req.body);
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    user = {
+      ...user,
+      password: hashedPassword,
+      temp_password: tempPassword
+    }
     await user.save();
     res.status(201).json(user);
   } catch (error) {
