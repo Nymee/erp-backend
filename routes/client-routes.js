@@ -1,13 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const clientController = require("../controllers/client-controller");
+const authenticateUser = require("../middlewares/authenticate-user");
+const authorizeRoles = require("../middlewares/authorize-role");
+const validate = require("../middlewares/validator");
+const { createClientSchema, updateClientSchema } = require("../validators/client.validator");
 
-router.get("/", authenticateUser, clientController.getClients);
+router.get("/", validate(createClientSchema),authenticateUser, clientController.getClients);
 router.post(
   "/",
+  validate(updateClientSchema),
   authenticateUser,
   authorizeRoles("SAU"),
   clientController.createClient
 );
-router.get("/:user_id", clientController.getClientById);
-router.patch("/:user_id", clientController.updateClient);
+router.get("/:client_id", clientController.getClientById);
+router.patch("/:client_id", clientController.updateClient);
+
+module.exports = router;

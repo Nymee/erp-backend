@@ -15,20 +15,20 @@ const signupCompany = async (req, res) => {
         field: Object.keys(error.keyValue),
       });
     } else
-      res
-        .status(500)
+      res.status(500)
         .json({ message: "Something went wrong. Please try again later." });
   }
 };
 
 const loginCompany = async (req, res) => {
   const user = req.user;
+  let token = '';
   if (user) {
-    const token = generateJWT(user);
+     token = generateJWT(user); 
   }
   res.status(200).json({
     message: "Login successful",
-    token,
+    token: token,
     user: {
       id: user._id,
       email: user.email,

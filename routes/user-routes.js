@@ -9,7 +9,7 @@ router.post(
   "/",
   authenticateUser,
   authorizeRoles("SAU"),
-  userController.createUser
+  userController.createUser 
 );
 router.get("/:user_id", userController.getUserById);
 router.patch("/:user_id", userController.updateUser);

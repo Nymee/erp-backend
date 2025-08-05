@@ -10,6 +10,7 @@ const verifyCompany = async (req, res) => {
     const { verified } = req.body; // "approved" or "rejected"
     const companyId = req.params.id;
 
+
     const company = await Company.findById(companyId);
     if (!company) {
       return res.status(404).json({ message: "Company does not exist" });
@@ -31,11 +32,11 @@ const verifyCompany = async (req, res) => {
         companyId: company._id,
       });
 
-      await sendMail({
-        to: company.email,
-        subject: "Company Approved",
-        text: `Hello ${company.name}, your company has been approved!`,
-      });
+      // await sendMail({
+      //   to: company.email_id,
+      //   subject: "Company Approved",
+      //   text: `Hello ${company.name}, your company has been approved!`,
+      // });
 
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -46,19 +47,20 @@ const verifyCompany = async (req, res) => {
         mobile: company.user_mobile,
         role: "SAU",
         password: hashedPassword,
+        temp_password: tempPassword,
         branchId: branch._id,
         companyId: company._id,
       });
 
-      await sendMail({
-        to: company.user_email,
-        subject: "Login Details - ERP",
-        text: `Your account has been created.\nEmail: ${company.user_email}\nTemporary Password: ${tempPassword}`,
-      });
+      // await sendMail({
+      //   to: company.user_email,
+      //   subject: "Login Details - ERP",
+      //   text: `Your account has been created.\nEmail: ${company.user_email}\nTemporary Password: ${tempPassword}`,
+      // });
     }
 
     res.status(200).json({ message: `Company ${verified} successfully.` });
-  } catch (err) {
+  } catch (err) { 
     console.error("Error in verifyCompany:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }

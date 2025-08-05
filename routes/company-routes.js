@@ -3,7 +3,8 @@ const { verify } = require("jsonwebtoken");
 const router = express.Router();
 const companyController = require("../controllers/company-controller");
 const validate = require("../middlewares/validator");
-const createCompanySchema = require("../validators/");
+const {verifyCompanySchema} = require("../validators/company.validator");
+
 router.put(
   "/status_update/:id",
   validate(verifyCompanySchema),

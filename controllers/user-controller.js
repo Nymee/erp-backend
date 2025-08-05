@@ -1,4 +1,5 @@
-const User = require("'../models/User");
+const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 const getUsers = async (req, res, next) => {
   try {
@@ -17,7 +18,7 @@ const getUsers = async (req, res, next) => {
 
 const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.user_id);
     if (!user) {
       const error = new Error("No such user");
       error.status = 404;
@@ -31,8 +32,9 @@ const getUserById = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const user = await User.findById(id);
+    const { user_id } = req.params;
+    console.log(user_id)
+    const user = await User.findById(user_id);
 
     if (!user) {
       const error = new Error("No such user");
@@ -41,6 +43,8 @@ const updateUser = async (req, res, next) => {
     }
 
     Object.assign(user, req.body);
+    console.log(req.body)
+    console.log(user, "USERRRRRRRRRRR")
     await user.save();
     res.status(200).json(user);
   } catch (error) {
@@ -50,7 +54,17 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const user = new User(req.body);
+    console.log(req.token)
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    let user = new User({
+      ...req.body,
+      password: hashedPassword,
+      temp_password: tempPassword,
+      companyId: req.token.company_id,
+      branchId: req.token.branch_id,
+    })
     await user.save();
     res.status(201).json(user);
   } catch (error) {
