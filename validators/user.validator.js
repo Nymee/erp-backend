@@ -8,8 +8,6 @@ const createUserSchema = Joi.object({
 
   role: Joi.string().valid("SAU", "SE", "MG", "ADMIN").default("SAU"),
 
-  branchId: objectIdValidator("branchId").required(),
-  companyId: objectIdValidator("companyId").required(),
 });
 
 const updateUserSchema = Joi.object({

@@ -1,8 +1,8 @@
-const Client = require("'../models/Client");
-
+const Client = require("../models/Client");
 const getClients = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
+
 
     if (!companyId) {
       return new Error();
@@ -17,7 +17,7 @@ const getClients = async (req, res, next) => {
 
 const getClientById = async (req, res, next) => {
   try {
-    const client = await Client.findById(req.params.id);
+    const client = await Client.findById(req.params.client_id);
     if (!client) {
       const error = new Error("No such client");
       error.status = 404;
@@ -31,8 +31,8 @@ const getClientById = async (req, res, next) => {
 
 const updateClient = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const client = await Client.findById(id);
+    const { client_id } = req.params;
+    const client = await Client.findById(client_id);
 
     if (!client) {
       const error = new Error("No such client");
@@ -50,7 +50,9 @@ const updateClient = async (req, res, next) => {
 
 const createClient = async (req, res, next) => {
   try {
-    const client = new Client(req.body);
+    console.log(req.body)
+    const client = new Client({...req.body, companyId: req.token.company_id, branchId: req.token.branch_id});
+    console.log("Creating client with data:", client);
     await client.save();
     res.status(201).json(client);
   } catch (error) {
