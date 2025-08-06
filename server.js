@@ -5,7 +5,7 @@ const companyRoutes = require("./routes/company-routes");
 const userRoutes = require("./routes/user-routes");
 
 const connectDB = require("./config/database");
-// const productRoutes = require("./routes/product-routes");
+const productRoutes = require("./routes/product-routes");
 // const salesRoutes = require("./routes/sales-routes");
 const clientRoutes = require("./routes/client-routes");
 
@@ -19,7 +19,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/client", clientRoutes);
-// app.use("/api/products", productRoutes);
+app.use("/api/product", productRoutes);
 // app.use("/api/sales", salesRoutes);
 
 app.listen(process.env.PORT, () => {

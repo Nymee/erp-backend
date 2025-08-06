@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { productValidationSchema } = require("../validators/product.validator");
+const {
+  createProductSchema,
+  updateProductSchema,
+} = require("../validators/product.validator");
 const validate = require("../middlewares/validator");
 const authenticateUser = require("../middlewares/authenticate-user");
 const {
@@ -8,21 +11,21 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
-} = require("../routes/product-routes");
+} = require("../controllers/product-controller");
 
-router.get("/products", authenticateUser, getProducts);
+router.get("/", authenticateUser, getProducts);
 router.post(
-  "/products",
+  "/",
   authenticateUser,
-  validate(productValidationSchema),
+  validate(createProductSchema),
   createProduct
 );
 router.patch(
-  "/products/:product_id",
+  "/:product_id",
   authenticateUser,
-  validate(productValidationSchema),
+  validate(updateProductSchema),
   updateProduct
 );
-router.delete("/products/:product_id", authenticateUser, deleteProduct);
+router.delete("/:product_id", authenticateUser, deleteProduct);
 
 module.exports = router;

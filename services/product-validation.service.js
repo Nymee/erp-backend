@@ -1,4 +1,5 @@
 function validateProduct(product, context) {
+  console.log(product, context);
   const cost_price = Number(product.cost_price);
   const min_margin = Number(product.min_margin);
   const max_margin = Number(product.max_margin);
@@ -47,18 +48,20 @@ function validateProduct(product, context) {
     throw new Error("Invalid margin_unit. Must be 'per' or 'rup'.");
   }
 
-  if (retail_margin_unit === "per") {
+  if (retail_margin_unit == "per") {
     retailMarginPrice = Number(
       (cost_price + (cost_price * retail_margin) / 100).toFixed(2)
     );
-  } else if (retail_margin_unit === "rup") {
+  } else if (retail_margin_unit == "rup") {
     retailMarginPrice = Number((cost_price + retail_margin).toFixed(2));
   } else {
+    console.log(retail_margin_unit);
     throw new Error("Invalid retail_margin_type. Must be 'per' or 'rup'.");
   }
 
   if (discount_unit === "per") {
     discountAmt = Number(((retailMarginPrice * discount) / 100).toFixed(2));
+    console.log(retailMarginPrice, discount, discountAmt);
   } else if (discount_unit === "rup") {
     discountAmt = Number(discount.toFixed(2));
   } else {
@@ -68,6 +71,7 @@ function validateProduct(product, context) {
   discountPrice = Number((retailMarginPrice - discountAmt).toFixed(2));
 
   if (discountPrice < minMarginPrice) {
+    console.log(discountPrice, minMarginPrice);
     throw new Error("Discount price should be greater than min_margin price.");
   }
 
@@ -76,7 +80,7 @@ function validateProduct(product, context) {
     (discountPrice + (discountPrice * totalTaxRate) / 100).toFixed(2)
   );
 
-  if (context == "product") {
+  if (context == "products") {
     return {
       values: {
         min_margin_price: minMarginPrice,

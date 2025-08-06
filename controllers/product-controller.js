@@ -32,7 +32,8 @@ const createProduct = async (req, res, next) => {
     product.company_id = companyId;
 
     // Run validation and calculations
-    const { values } = validateProduct(product);
+    const { values } = validateProduct(product, "products");
+    console.log(values);
 
     // Merge calculated values into product
     const finalData = {
