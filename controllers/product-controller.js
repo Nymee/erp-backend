@@ -29,7 +29,9 @@ const createProduct = async (req, res, next) => {
     }
 
     // Attach company ID before validation
-    product.company_id = companyId;
+    product.companyId = companyId;
+
+    console.log(companyId, product);
 
     // Run validation and calculations
     const { values } = validateProduct(product, "products");
@@ -42,8 +44,10 @@ const createProduct = async (req, res, next) => {
     };
 
     // Save to DB
+    console.log(finalData);
     const finalProduct = new Product(finalData);
     await finalProduct.save();
+    console.log(finalProduct);
 
     res.status(201).json({ message: "Product created successfully" });
   } catch (err) {
