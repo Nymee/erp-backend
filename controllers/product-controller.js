@@ -67,9 +67,9 @@ const updateProduct = async (req, res, next) => {
       throw error;
     }
     Object.assign(product, req.body);
-    const values = validateProduct(product.toObject());
+    const values = validateProduct(product.toObject(), "products");
     Object.assign(product, values);
-    await finalProduct.save();
+    await product.save();
     res.status(200).json({ message: "Product updated", product });
   } catch (err) {
     next(err);
