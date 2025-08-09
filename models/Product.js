@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema({
   gst: { type: Number },
   cess: { type: Number },
   sales_price: { type: Number, required: true },
+  companyId : {type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true},
 });
 
 const Product = mongoose.model("Product", productSchema);
