@@ -6,7 +6,7 @@ const userRoutes = require("./routes/user-routes");
 
 const connectDB = require("./config/database");
 const productRoutes = require("./routes/product-routes");
-// const salesRoutes = require("./routes/sales-routes");
+const salesRoutes = require("./routes/sales-routes");
 const clientRoutes = require("./routes/client-routes");
 
 dotenv.config();
@@ -20,7 +20,7 @@ app.use("/api/company", companyRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/product", productRoutes);
-// app.use("/api/sales", salesRoutes);
+app.use("/api/sales", salesRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log("listening");
