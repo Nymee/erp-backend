@@ -93,7 +93,6 @@ function validateProduct(product, context) {
     };
   } else if (context == "sales") {
     return {
-      values: {
         cost_price: cost_price,
         min_margin: min_margin,
         max_margin: max_margin,
@@ -111,7 +110,6 @@ function validateProduct(product, context) {
 
         total_sales_price: salesPrice * quantity,
         quantity: quantity,
-      },
     };
   }
 }
