@@ -8,13 +8,11 @@ async function createSalesWorkFlow(body) {
   const so_discount = body.so_discount;
   const so_discount_type = body.so_discount_type;
 
-
   let soResult = {
     so_discount_amount: 0,
     grand_total_before_so_discount: 0,
     grand_total: 0,
   };
-
 
   let productList = await validateWithProductData(salesProducts);
   if (!productList.length) {
@@ -100,8 +98,7 @@ async function updateSalesWorkflow(body, sales_id) {
 
 async function validateWithProductData(salesProducts) {
   //you redeclared salesProducts
-  console.log(salesProducts, "salesProducts in validateWithProductData");
-    const salesProductIds = salesProducts.map((p) => p.productId);
+  const salesProductIds = salesProducts.map((p) => p.productId);
 
   const originalProducts = await Product.find({
     _id: { $in: salesProductIds }, //comparison by value not by reference
@@ -128,6 +125,7 @@ async function validateWithProductData(salesProducts) {
           margin_unit: original.margin_unit,
           gst: original.gst,
           cess: original.cess,
+          cost_price: original.cost_price,
         };
 
         const prodToValidate = {
@@ -192,7 +190,6 @@ async function validateWithSalesData(salesProducts, estProds) {
 }
 
 function applySODiscount(products, so_discount, so_discount_type) {
-  console.log(products, so_discount, so_discount_type, "applySODiscount");
   const grand_total_before_so_discount = grandTotalBeforeSoDiscount(products);
   let so_discount_amount = 0;
   let grand_total = grand_total_before_so_discount;
@@ -206,11 +203,6 @@ function applySODiscount(products, so_discount, so_discount_type) {
     grand_total = grand_total_before_so_discount - so_discount_amount;
   }
 
-  console.log(
-    grand_total_before_so_discount,
-    so_discount_amount,
-    grand_total,
-    "hehe" )
   return {
     grand_total_before_so_discount,
     so_discount_amount,

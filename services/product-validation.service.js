@@ -1,5 +1,4 @@
 function validateProduct(product, context) {
-  console.log(product, context);
   const cost_price = Number(product.cost_price);
   const min_margin = Number(product.min_margin);
   const max_margin = Number(product.max_margin);
@@ -93,23 +92,24 @@ function validateProduct(product, context) {
     };
   } else if (context == "sales") {
     return {
-        cost_price: cost_price,
-        min_margin: min_margin,
-        max_margin: max_margin,
-        margin_unit: margin_unit,
+      productId: product.productId,
+      cost_price: cost_price,
+      min_margin: min_margin,
+      max_margin: max_margin,
+      margin_unit: margin_unit,
 
-        retail_margin: retail_margin,
-        retail_margin_type: retail_margin_type,
+      retail_margin: retail_margin,
+      retail_margin_type: retail_margin_type,
 
-        discount: discount,
-        discount_type: discount_type,
+      discount: discount,
+      discount_type: discount_type,
 
-        gst: gst,
-        cess: cess,
-        sales_price: salesPrice,
+      gst: gst,
+      cess: cess,
+      sales_price: salesPrice,
 
-        total_sales_price: salesPrice * quantity,
-        quantity: quantity,
+      total_sales_price: salesPrice * quantity,
+      quantity: quantity,
     };
   }
 }
