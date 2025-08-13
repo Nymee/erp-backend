@@ -6,8 +6,10 @@ const {
 
 const createSales = async (req, res, next) => {
   try {
+    const companyId = req.token.company_id;
     const data = await createSalesWorkFlow(req.body);
-    const newSales = new Sales(data);
+    console.log("data", data);
+    const newSales = new Sales({ ...data, companyId });
     const sales = await newSales.save();
 
     res
@@ -39,4 +41,10 @@ const dispatchProducts = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+
+module.exports = {
+  createSales,
+  updateSales,
+  dispatchProducts,
 };

@@ -33,7 +33,7 @@ const getUserById = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { user_id } = req.params;
-    console.log(user_id)
+    console.log(user_id);
     const user = await User.findById(user_id);
 
     if (!user) {
@@ -43,8 +43,7 @@ const updateUser = async (req, res, next) => {
     }
 
     Object.assign(user, req.body);
-    console.log(req.body)
-    console.log(user, "USERRRRRRRRRRR")
+    console.log(req.body);
     await user.save();
     res.status(200).json(user);
   } catch (error) {
@@ -54,7 +53,7 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    console.log(req.token)
+    console.log(req.token);
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
@@ -64,7 +63,7 @@ const createUser = async (req, res, next) => {
       temp_password: tempPassword,
       companyId: req.token.company_id,
       branchId: req.token.branch_id,
-    })
+    });
     await user.save();
     res.status(201).json(user);
   } catch (error) {

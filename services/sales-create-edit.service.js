@@ -7,6 +7,7 @@ async function createSalesWorkFlow(body) {
   const salesProducts = body.products;
   const so_discount = body.so_discount;
   const so_discount_type = body.so_discount_type;
+
   let soResult = {
     so_discount_amount: 0,
     grand_total_before_so_discount: 0,
@@ -65,7 +66,7 @@ async function updateSalesWorkflow(body, sales_id) {
   if (expired) {
     const error = new Error(
       `The following products have expired and must be refreshed: ${expiredProducts
-        .map((p) => p.product_id)
+        .map((p) => p.productId)
         .join(", ")}`
     );
     error.status = 400;
@@ -97,7 +98,8 @@ async function updateSalesWorkflow(body, sales_id) {
 
 async function validateWithProductData(salesProducts) {
   //you redeclared salesProducts
-  const salesProductIds = salesProducts.map((p) => p.product_id);
+  const salesProductIds = salesProducts.map((p) => p.productId);
+
   const originalProducts = await Product.find({
     _id: { $in: salesProductIds }, //comparison by value not by reference
   }).lean(); //you forgot await
@@ -111,7 +113,7 @@ async function validateWithProductData(salesProducts) {
     const salesProductsMap = new Map();
     for (const product of salesProducts) {
       // you wrote in instead of of
-      salesProductsMap.set(product.product_id.toString(), product);
+      salesProductsMap.set(product.productId.toString(), product);
     }
 
     for (const original of originalProducts) {
@@ -123,6 +125,7 @@ async function validateWithProductData(salesProducts) {
           margin_unit: original.margin_unit,
           gst: original.gst,
           cess: original.cess,
+          cost_price: original.cost_price,
         };
 
         const prodToValidate = {
@@ -149,10 +152,10 @@ async function validateWithProductData(salesProducts) {
 
 async function validateWithSalesData(salesProducts, estProds) {
   let validatedProductsArray = [];
-  const estProdMap = new Map(estProds.map((p) => [String(p.product_id), p]));
+  const estProdMap = new Map(estProds.map((p) => [String(p.productId), p]));
 
   for (const product of salesProducts) {
-    const current = estProdMap.get(String(product.product_id));
+    const current = estProdMap.get(String(product.productId));
     if (!current) continue;
 
     const last_refresh = current.last_refresh;
@@ -178,7 +181,7 @@ async function validateWithSalesData(salesProducts, estProds) {
       }
     } catch (err) {
       throw new Error(
-        `Validation failed for product ${product.product_id}: ${err.message}`
+        `Validation failed for product ${product.productId}: ${err.message}`
       );
     }
   }

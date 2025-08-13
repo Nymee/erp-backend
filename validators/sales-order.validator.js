@@ -2,12 +2,12 @@ const Joi = require("joi");
 const objectIdValidator = require("../utils/object-validator");
 
 const salesProductSchema = Joi.object({
-  product_id: objectIdValidator("productId"),
+  productId: objectIdValidator("productId"),
   quantity: Joi.number().required(),
   retail_margin: Joi.number().required(),
   retail_margin_type: Joi.string().required(),
   discount: Joi.number().optional(),
-  discount_type: Joi.string().optional(),
+  discount_type: Joi.string().valid("per", "rup").optional(),
 })
   .unknown(false)
   .and("discount", "discount_type")
@@ -25,10 +25,10 @@ const salesProductSchema = Joi.object({
   });
 
 const createSOESchema = Joi.object({
-  client_id: objectIdValidator("clientId"),
+  clientId: objectIdValidator("clientId"),
   products: Joi.array().items(salesProductSchema).required(),
   so_discount: Joi.number().optional(),
-  so_discount_type: Joi.number().optional(),
+  so_discount_type: Joi.string().valid("per", "rup").optional(),
   type: Joi.string().valid("order", "estimation").required(),
 })
   .and("so_discount", "so_discount_type")
@@ -67,3 +67,9 @@ const updateSOE = Joi.object({
 
     return value;
   });
+
+
+  module.exports = {
+    createSOESchema,
+updateSOE
+  }

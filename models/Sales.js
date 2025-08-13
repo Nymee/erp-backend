@@ -1,13 +1,5 @@
 const mongoose = require("mongoose");
 
-const salesSchema = new mongoose.Schema({
-  client_id: { type: String, required: true },
-  product: { type: [salesProductSchema], required: true },
-  so_discount: { type: Number, required: true },
-  so_discount_type: { type: String, required: true },
-  type: { type: String, enum: ["order", "estimation"], required: true },
-});
-
 const salesProductSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -27,6 +19,19 @@ const salesProductSchema = new mongoose.Schema(
   },
   { _id: false }
 );
+
+const salesSchema = new mongoose.Schema({
+  clientId: { type: String, required: true },
+  products: { type: [salesProductSchema], required: true },
+  so_discount: { type: Number, required: true },
+  so_discount_type: { type: String, required: true },
+  type: { type: String, enum: ["order", "estimation"], required: true },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+    required: true,
+  },
+});
 
 const Sales = mongoose.model("Sales", salesSchema);
 
