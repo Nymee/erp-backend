@@ -16,6 +16,7 @@ const salesProductSchema = new mongoose.Schema(
     expiry: { type: Number, required: true },
     dispatched_qty: { type: Number, default: 0 },
     fully_dispatched: { type: Boolean, default: false },
+    cost_price: {type: Number, required: true}
   },
   { _id: false }
 );
