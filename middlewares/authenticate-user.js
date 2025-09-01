@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const { AuthorizationError } = require("../utils/errors/custom-error");
 
 const authenticateUser = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorisation;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next(new AuthorizationError("Unauthorized: No token provided"));
