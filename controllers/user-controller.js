@@ -1,16 +1,38 @@
+const { build } = require("joi");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-
+const { buildFilter } = require("../utils/filter-builder");
 const getUsers = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
-
-    if (!companyId) {
-      return new Error();
+        if (!companyId) {
+      throw new Error();
     }
 
-    const users = await User.find({ companyId });
-    res.status(200).json(users);
+    console.log(companyId, "companyId from token");
+
+    let { page = 1, limit = 10, order = "asc", orderBy = "name", search = "" } = req.query;
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+
+    console.log("Query params:", { page, limit, order, orderBy, search });
+
+    const filter = buildFilter({search, fields:["name", "mobile","email"], baseFilter: {companyId}})
+
+    console.log("Constructed filter:", JSON.stringify(filter));
+
+    const users = await User.find(filter).sort({ [orderBy]: order === "asc" ? 1 : -1 })
+    .skip((page-1) * limit)
+    .limit(limit);;
+
+    console.log(`Fetched ${users} users from DB`);
+    const total = await User.countDocuments(filter);
+
+    const data = {
+      data: users,
+      total: total
+    }
+    res.status(200).json(data);
   } catch (err) {
     next(err);
   }
