@@ -6,7 +6,6 @@ const createClientSchema = Joi.object({
     email_id: Joi.string().email().required(),
     mobile: Joi.string().required(),
     address: Joi.string()
-    
 })
 
 const updateClientSchema = Joi.object({
