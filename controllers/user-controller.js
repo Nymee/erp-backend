@@ -19,17 +19,16 @@ const getUsers = async (req, res, next) => {
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
 
-    const filter = buildFilter({
-      search,
-      fields: ["name", "mobile", "email"],
-      baseFilter: { companyId },
-    });
 
     const users = await User.find(filter)
       .sort({ [orderBy]: order === "asc" ? 1 : -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
+
+
+
+    console.log(`Fetched ${users} users from DB`);
     const total = await User.countDocuments(filter);
 
     const data = {

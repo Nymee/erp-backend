@@ -1,20 +1,31 @@
 const Product = require("../models/Product");
 const validateProduct = require("../services/product-validation.service");
-
+const { getProductList } = require("../services/product-service/product-service");
 const getProducts = async (req, res, next) => {
-  const companyId = req.token.company_id;
-  if (!companyId) {
-    const error = new Error("Company ID missing in token");
-    error.status = 401;
-    throw error;
-  }
   try {
-    const products = await Product.find({ companyId });
-    res.status(200).json(products);
+    const companyId = req.token.company_id;
+    if (!companyId) {
+      return res.status(401).json({ error: "Company ID missing in token" });
+    }
+
+    const { page, limit, order, orderBy, search } = req.query;
+
+    const result = await getProductList({
+      companyId,
+      page,
+      limit,
+      order,
+      orderBy,
+      search,
+    });
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 };
+
+
 
 const createProduct = async (req, res, next) => {
   try {
