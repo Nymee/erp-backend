@@ -8,7 +8,6 @@ const createSales = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
     const data = await createSalesWorkFlow(req.body);
-    console.log("data", data);
     const newSales = new Sales({ ...data, companyId });
     const sales = await newSales.save();
 

@@ -3,7 +3,6 @@ const getClients = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
 
-
     if (!companyId) {
       return new Error();
     }
@@ -50,9 +49,11 @@ const updateClient = async (req, res, next) => {
 
 const createClient = async (req, res, next) => {
   try {
-    console.log(req.body)
-    const client = new Client({...req.body, companyId: req.token.company_id, branchId: req.token.branch_id});
-    console.log("Creating client with data:", client);
+    const client = new Client({
+      ...req.body,
+      companyId: req.token.company_id,
+      branchId: req.token.branch_id,
+    });
     await client.save();
     res.status(201).json(client);
   } catch (error) {

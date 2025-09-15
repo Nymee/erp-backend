@@ -5,33 +5,37 @@ const { buildFilter } = require("../utils/filter-builder");
 const getUsers = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
-        if (!companyId) {
+    if (!companyId) {
       throw new Error();
     }
 
-    console.log(companyId, "companyId from token");
-
-    let { page = 1, limit = 10, order = "asc", orderBy = "name", search = "" } = req.query;
+    let {
+      page = 1,
+      limit = 10,
+      order = "asc",
+      orderBy = "name",
+      search = "",
+    } = req.query;
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
 
-    console.log("Query params:", { page, limit, order, orderBy, search });
+    const filter = buildFilter({
+      search,
+      fields: ["name", "mobile", "email"],
+      baseFilter: { companyId },
+    });
 
-    const filter = buildFilter({search, fields:["name", "mobile","email"], baseFilter: {companyId}})
+    const users = await User.find(filter)
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    console.log("Constructed filter:", JSON.stringify(filter));
-
-    const users = await User.find(filter).sort({ [orderBy]: order === "asc" ? 1 : -1 })
-    .skip((page-1) * limit)
-    .limit(limit);;
-
-    console.log(`Fetched ${users} users from DB`);
     const total = await User.countDocuments(filter);
 
     const data = {
       data: users,
-      total: total
-    }
+      total: total,
+    };
     res.status(200).json(data);
   } catch (err) {
     next(err);
@@ -55,7 +59,6 @@ const getUserById = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { user_id } = req.params;
-    console.log(user_id);
     const user = await User.findById(user_id);
 
     if (!user) {
@@ -65,7 +68,6 @@ const updateUser = async (req, res, next) => {
     }
 
     Object.assign(user, req.body);
-    console.log(req.body);
     await user.save();
     res.status(200).json(user);
   } catch (error) {
@@ -75,7 +77,6 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    console.log(req.token);
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 

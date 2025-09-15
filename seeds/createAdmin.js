@@ -19,8 +19,6 @@ const createDefaultAdmin = async () => {
         password: hashedPassword,
         // Note: We are not including `companyId` and `branchId` for the admin
       });
-
-      console.log("Default Admin created successfully.");
     } else {
       console.log("Admin already exists.");
     }
