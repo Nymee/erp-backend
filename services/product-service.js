@@ -1,11 +1,14 @@
-const Product = require("../../models/Product");
-const { buildFilter } = require("../../utils/filter-builder");
+const Product = require("../models/Product");
+const { buildFilter } = require("../utils/filter-builder");
 
- 
- 
- 
- 
- async function getProductList ({ companyId, page = 1, limit = 10, order = "asc", orderBy = "name", search = "" }){
+async function getProductList({
+  companyId,
+  page = 1,
+  limit = 10,
+  order = "asc",
+  orderBy = "name",
+  search = "",
+}) {
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
 
@@ -39,8 +42,6 @@ const { buildFilter } = require("../../utils/filter-builder");
       totalPages: Math.ceil(total / limit),
     },
   };
-};
+}
 
-
-
-module.exports = {getProductList};
+module.exports = { getProductList };

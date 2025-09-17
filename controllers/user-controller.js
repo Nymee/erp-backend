@@ -24,7 +24,6 @@ const getUsers = async (req, res, next) => {
       fields: ["name", "email", "mobile"],
       baseFilter: { companyId },
     });
-    console.log(filter);
 
     const users = await User.find(filter)
       .sort({ [orderBy]: order === "asc" ? 1 : -1 })

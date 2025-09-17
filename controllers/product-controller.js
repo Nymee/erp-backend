@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 const validateProduct = require("../services/product-validation.service");
-const { getProductList } = require("../services/product-service/product-service");
+const { getProductList } = require("../services/product-service");
 const getProducts = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
@@ -24,8 +24,6 @@ const getProducts = async (req, res, next) => {
     next(err);
   }
 };
-
-
 
 const createProduct = async (req, res, next) => {
   try {
