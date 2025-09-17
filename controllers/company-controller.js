@@ -3,13 +3,12 @@ const sendMail = require("../utils/email-service");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const Branch = require("../models/Branch");
+const { buildFilter } = require("../utils/filter-builder");
 
-// Verify Company
 const verifyCompany = async (req, res) => {
   try {
-    const { verified } = req.body; // "approved" or "rejected"
+    const { isVerified } = req.body;
     const companyId = req.params.id;
-
 
     const company = await Company.findById(companyId);
     if (!company) {
@@ -22,11 +21,11 @@ const verifyCompany = async (req, res) => {
         .json({ message: "Company has already been updated" });
     }
 
-    company.isVerified = verified;
+    company.isVerified = isVerified;
 
     await company.save();
 
-    if (verified === "approved") {
+    if (isVerified === "approved") {
       const branch = await Branch.create({
         name: "Head Office",
         companyId: company._id,
@@ -59,22 +58,53 @@ const verifyCompany = async (req, res) => {
       // });
     }
 
-    res.status(200).json({ message: `Company ${verified} successfully.` });
-  } catch (err) { 
+    res.status(200).json({ message: `Company ${isVerified} successfully.` });
+  } catch (err) {
     console.error("Error in verifyCompany:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Get All Companies
-const getCompanies = async (req, res) => {
+const getCompanies = async (req, res, next) => {
   try {
-    const companies = await Company.find();
-    res.status(200).json(companies);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch companies", error });
+    let {
+      page = 1,
+      limit = 10,
+      order = "asc",
+      orderBy = "name",
+      search = "",
+      isVerified = "approved",
+    } = req.query;
+
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+
+    const filter = buildFilter({
+      search,
+      fields: ["name", "email", "address"],
+      baseFilter: { isVerified },
+    });
+
+    const companies = await Company.find(filter)
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const total = await Company.countDocuments(filter);
+
+    const data = {
+      data: companies,
+      total: total,
+    };
+
+    console.log(`Fetched ${companies.length} companies from DB`);
+    res.status(200).json(data);
+  } catch (err) {
+    next(err);
   }
 };
+
+module.exports = { getCompanies };
 
 // Get Company By ID
 const getCompanyById = async (req, res, next) => {
