@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const { buildFilter } = require("../utils/filter-builder");
+
 const getUsers = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
@@ -20,9 +21,10 @@ const getUsers = async (req, res, next) => {
 
     const filter = buildFilter({
       search,
-      field: ["name", "email", "mobile"],
-      companyId,
+      fields: ["name", "email", "mobile"],
+      baseFilter: { companyId },
     });
+    console.log(filter);
 
     const users = await User.find(filter)
       .sort({ [orderBy]: order === "asc" ? 1 : -1 })
