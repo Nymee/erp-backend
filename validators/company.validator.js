@@ -1,7 +1,7 @@
 const Joi = require("joi");
 
 const verifyCompanySchema = Joi.object({
-  verified: Joi.string().valid("approved", "rejected").required(),
+  isVerified: Joi.string().valid("approved", "rejected").required(),
 });
 
 const createCompanySchema = Joi.object({
@@ -23,7 +23,7 @@ const updateCompanySchema = Joi.object({
   user_email: Joi.string().email(),
   user_mobile: Joi.string(),
 
-  isVerified: Joi.string().valid("approve", "pending", "reject"),
+  isVerified: Joi.string().valid("approved", "pending", "rejected"),
 }).min(1);
 
 module.exports = {
