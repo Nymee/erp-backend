@@ -1,4 +1,5 @@
 const Sales = require("../models/Sales");
+const { getSalesProductList } = require("../services/product-service");
 const {
   createSalesWorkFlow,
   updateSalesWorkflow,
@@ -18,6 +19,33 @@ const createSales = async (req, res, next) => {
     next(err);
   }
 };
+
+
+const getSalesProducts = async (req, res, next) =>{
+
+    try {
+    const companyId = req.token.company_id;
+    if (!companyId) {
+      return res.status(401).json({ error: "Company ID missing in token" });
+    }
+
+    const { page, limit, order, orderBy, search } = req.query;
+
+    const result = await getSalesProductList({
+      companyId,
+      page,
+      limit,
+      order,
+      orderBy,
+      search,
+    });
+
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+
+}
 
 const updateSales = async (req, res, next) => {
   try {
@@ -46,4 +74,5 @@ module.exports = {
   createSales,
   updateSales,
   dispatchProducts,
+  getSalesProducts
 };
