@@ -1,14 +1,25 @@
 const Client = require("../models/Client");
+const { getClientList } = require("../services/client-service");
 const getClients = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
-
     if (!companyId) {
-      return new Error();
+      return res.status(401).json({ error: "Company ID missing in token" });
     }
 
-    const users = await Client.find({ companyId });
-    res.status(200).json(users);
+    const { page, limit, order, orderBy, search, dropdown } = req.query;
+
+    result = await getClientList({
+      companyId,
+      page,
+      limit,
+      order,
+      orderBy,
+      search,
+      dropdown,
+    });
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
