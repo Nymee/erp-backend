@@ -16,13 +16,14 @@ const salesProductSchema = new mongoose.Schema(
     expiry: { type: Number, required: true },
     dispatched_qty: { type: Number, default: 0 },
     fully_dispatched: { type: Boolean, default: false },
-    cost_price: {type: Number, required: true}
+    cost_price: { type: Number, required: true },
   },
   { _id: false }
 );
 
 const salesSchema = new mongoose.Schema({
   clientId: { type: String, required: true },
+  client_name: { type: String, required: true },
   products: { type: [salesProductSchema], required: true },
   so_discount: { type: Number, required: true },
   so_discount_type: { type: String, required: true },
@@ -32,6 +33,10 @@ const salesSchema = new mongoose.Schema({
     ref: "Company",
     required: true,
   },
+  grand_total_before_so_discount: { type: Number, required: true },
+  so_discount_amount: { type: Number, required: true },
+  grand_total: { type: Number, required: true },
+  order_no: { type: String, required: true },
 });
 
 const Sales = mongoose.model("Sales", salesSchema);

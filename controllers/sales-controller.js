@@ -1,15 +1,27 @@
+const Client = require("../models/Client");
 const Sales = require("../models/Sales");
 const { getSalesProductList } = require("../services/product-service");
 const {
   createSalesWorkFlow,
   updateSalesWorkflow,
 } = require("../services/sales-create-edit.service");
+const { v4: uuidv4 } = require("uuid");
 
 const createSales = async (req, res, next) => {
   try {
     const companyId = req.token.company_id;
+
     const data = await createSalesWorkFlow(req.body);
-    const newSales = new Sales({ ...data, companyId });
+    const client = await Client.findById(req.body.clientId).lean();
+    console.log(client, "lalalala");
+    const orderNumber = `SO-${uuidv4().slice(0, 8).toUpperCase()}`; // e.g., SO-4F7A9B1C
+
+    const newSales = new Sales({
+      ...data,
+      companyId,
+      client_name: client.name,
+      order_no: orderNumber,
+    });
     const sales = await newSales.save();
 
     res
@@ -20,10 +32,30 @@ const createSales = async (req, res, next) => {
   }
 };
 
+const getSales = async (req, res, next) => {
+  try {
+    const companyId = req.token.company_id;
+    if (!companyId) {
+      return res.status(401).json({ error: "Company ID missing in token" });
+    }
+    const { page, limit, order, orderBy, search } = req.query;
+    const result = await getSalesList({
+      companyId,
+      page,
+      limit,
+      order,
+      orderBy,
+      search,
+    });
 
-const getSalesProducts = async (req, res, next) =>{
+    res.status(200).json(result);
+  } catch {
+    next(err);
+  }
+};
 
-    try {
+const getSalesProducts = async (req, res, next) => {
+  try {
     const companyId = req.token.company_id;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
@@ -44,8 +76,7 @@ const getSalesProducts = async (req, res, next) =>{
   } catch (err) {
     next(err);
   }
-
-}
+};
 
 const updateSales = async (req, res, next) => {
   try {
@@ -74,5 +105,5 @@ module.exports = {
   createSales,
   updateSales,
   dispatchProducts,
-  getSalesProducts
+  getSalesProducts,
 };

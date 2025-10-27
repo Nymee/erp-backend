@@ -68,8 +68,7 @@ const updateSOE = Joi.object({
     return value;
   });
 
-
-  module.exports = {
-    createSOESchema,
-updateSOE
-  }
+module.exports = {
+  createSOESchema,
+  updateSOE,
+};
