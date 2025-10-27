@@ -8,14 +8,12 @@ const connectDB = require("./config/database");
 const productRoutes = require("./routes/product-routes");
 const salesRoutes = require("./routes/sales-routes");
 const clientRoutes = require("./routes/client-routes");
-const cors = require('cors');
-
+const cors = require("cors");
 
 dotenv.config();
 connectDB();
-// const route =
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: "http://localhost:5173" }));
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
