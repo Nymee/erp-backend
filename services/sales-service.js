@@ -1,4 +1,5 @@
 const Sales = require("../models/Sales");
+const { buildFilter } = require("../utils/filter-builder");
 
 async function getSalesList({
   companyId,
@@ -19,12 +20,12 @@ async function getSalesList({
 
   const sales = await Sales.find(filter, {
     name: 1,
+    client_name: 1,
     clientId: 1,
-    retail_margin: 1,
-    discount_price: 1,
-    gst: 1,
-    cess: 1,
-    sales_price: 1,
+    order_no: 1,
+    grand_total: 1,
+    products: 1,
+    type: 1,
   })
     .sort({ [orderBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
@@ -33,7 +34,9 @@ async function getSalesList({
   const total = await Sales.countDocuments(filter);
 
   return {
-    data: products,
+    data: sales,
     total,
   };
 }
+
+module.exports = { getSalesList };
