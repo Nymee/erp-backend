@@ -6,6 +6,7 @@ const {
   updateSalesWorkflow,
 } = require("../services/sales-create-edit.service");
 const { v4: uuidv4 } = require("uuid");
+const { getSalesList } = require("../services/sales-service");
 
 const createSales = async (req, res, next) => {
   try {
@@ -13,7 +14,6 @@ const createSales = async (req, res, next) => {
 
     const data = await createSalesWorkFlow(req.body);
     const client = await Client.findById(req.body.clientId).lean();
-    console.log(client, "lalalala");
     const orderNumber = `SO-${uuidv4().slice(0, 8).toUpperCase()}`; // e.g., SO-4F7A9B1C
 
     const newSales = new Sales({
@@ -49,7 +49,7 @@ const getSales = async (req, res, next) => {
     });
 
     res.status(200).json(result);
-  } catch {
+  } catch (err) {
     next(err);
   }
 };
@@ -106,4 +106,5 @@ module.exports = {
   updateSales,
   dispatchProducts,
   getSalesProducts,
+  getSales,
 };
