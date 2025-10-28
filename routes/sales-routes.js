@@ -6,6 +6,7 @@ const {
   updateSales,
   dispatchProducts,
   getSalesProducts,
+  getSales,
 } = require("../controllers/sales-controller");
 const validator = require("../middlewares/validator");
 const {
@@ -16,5 +17,6 @@ const {
 router.post("/dispatch", authenticateUser, dispatchProducts);
 router.post("/", authenticateUser, validator(createSOESchema), createSales);
 router.get("/product", authenticateUser, getSalesProducts);
+router.get("/", authenticateUser, getSales);
 
 module.exports = router;
