@@ -18,5 +18,6 @@ router.post("/dispatch", authenticateUser, dispatchProducts);
 router.post("/", authenticateUser, validator(createSOESchema), createSales);
 router.get("/product", authenticateUser, getSalesProducts);
 router.get("/", authenticateUser, getSales);
+router.put("/:sales_id", authenticateUser, updateSales);
 
 module.exports = router;

@@ -46,7 +46,7 @@ const getSales = async (req, res, next) => {
       order,
       orderBy,
       search,
-      type
+      type,
     });
 
     res.status(200).json(result);
@@ -80,8 +80,10 @@ const getSalesProducts = async (req, res, next) => {
 };
 
 const updateSales = async (req, res, next) => {
+  console.log("heheheheh");
   try {
     const estimation = await updateSalesWorkflow(req.body, req.params.sales_id);
+    console.log("heheheheh", estimation);
 
     await estimation.save();
 

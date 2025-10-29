@@ -1,4 +1,4 @@
- function buildFilter({ search = "", fields = [], baseFilter = {} }) {
+function buildFilter({ search = "", fields = [], baseFilter = {} }) {
   let filter = { ...baseFilter };
 
   if (search && fields.length > 0) {
@@ -6,6 +6,8 @@
       [field]: { $regex: search, $options: "i" },
     }));
   }
+
+  console.log(filter);
 
   return filter;
 }

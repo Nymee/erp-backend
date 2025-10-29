@@ -8,16 +8,23 @@ async function getSalesList({
   order = "asc",
   orderBy = "name",
   search = "",
-  type=""
+  type = "",
 }) {
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
 
+  let baseFilter = { companyId };
+  if (type != "") {
+    baseFilter = { ...baseFilter, type };
+  }
+
   const filter = buildFilter({
     search,
     fields: ["name"],
-    baseFilter: { companyId, type},
+    baseFilter,
   });
+
+  console.log("fillll", filter);
 
   const sales = await Sales.find(filter, {
     name: 1,
