@@ -8,6 +8,7 @@ async function getSalesList({
   order = "asc",
   orderBy = "name",
   search = "",
+  type=""
 }) {
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
@@ -15,7 +16,7 @@ async function getSalesList({
   const filter = buildFilter({
     search,
     fields: ["name"],
-    baseFilter: { companyId },
+    baseFilter: { companyId, type},
   });
 
   const sales = await Sales.find(filter, {

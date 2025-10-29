@@ -38,7 +38,7 @@ const getSales = async (req, res, next) => {
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
-    const { page, limit, order, orderBy, search } = req.query;
+    const { page, limit, order, orderBy, search, type } = req.query;
     const result = await getSalesList({
       companyId,
       page,
@@ -46,6 +46,7 @@ const getSales = async (req, res, next) => {
       order,
       orderBy,
       search,
+      type
     });
 
     res.status(200).json(result);
