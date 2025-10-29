@@ -1,4 +1,7 @@
 function diffProducts(existingProducts, incomingProducts) {
+  console.log(incomingProducts, "kreeeeeeeee");
+  console.log(existingProducts, "kreeeeeeeee");
+
   const existingMap = new Map();
   const newOrRefreshed = [];
   const removed = [];

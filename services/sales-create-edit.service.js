@@ -46,7 +46,7 @@ async function updateSalesWorkflow(body, sales_id) {
   };
 
   const estimation = await Sales.findById(salesId);
-  const estimationInfo = await estimation.lean();
+  const estimationInfo = await Sales.findById(salesId).lean();
 
   if (!estimationInfo) {
     throw new Error("Estimation not found.");
@@ -57,6 +57,7 @@ async function updateSalesWorkflow(body, sales_id) {
     throw error;
   }
   const estProds = estimationInfo.products;
+  console.log(estProds, "estPRods");
   const { newOrRefreshed, updated: existingProducts } = diffProducts(
     estProds,
     salesProducts
