@@ -8,8 +8,6 @@ const salesProductSchema = Joi.object({
   retail_margin_type: Joi.string().required(),
   discount: Joi.number().optional(),
   discount_type: Joi.string().valid("per", "rup").optional(),
-  gst: Joi.number().required(),
-  cess: Joi.number().required(),
 })
   .unknown(false)
   .and("discount", "discount_type")

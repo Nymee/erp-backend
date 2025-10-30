@@ -6,7 +6,7 @@ function validateProduct(product, context) {
   const retail_margin_type = product.retail_margin_type;
   const discount_type = product.discount_type;
   const discount = Number(product.discount ?? 0); // Handles undefined/null
-  const margin_unit = product.margin_unit;
+  const margin_unit = product.margin_unit || "rup";
   const gst = Number(product.gst ?? 0);
   const cess = Number(product.cess ?? 0);
   const quantity = Number(product.quantity ?? 1);
