@@ -57,7 +57,6 @@ async function updateSalesWorkflow(body, sales_id) {
     throw error;
   }
   const estProds = estimationInfo.products;
-  console.log(estProds, "estPRods");
   const { newOrRefreshed, updated: existingProducts } = diffProducts(
     estProds,
     salesProducts
@@ -164,9 +163,9 @@ async function validateWithSalesData(salesProducts, estProds) {
     const estProdDetails = {
       min_margin: current.min_margin,
       max_margin: current.max_margin,
-      margin_unit: current.margin_unit,
       gst: current.gst,
       cess: current.cess,
+      cost_price: current.cost_price,
     };
 
     const prodToValidate = {

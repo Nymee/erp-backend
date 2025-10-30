@@ -39,6 +39,13 @@ const salesSchema = new mongoose.Schema({
   so_discount_amount: { type: Number, required: true },
   grand_total: { type: Number, required: true },
   order_no: { type: String, required: true },
+
+  // timestamps
+  createdAt: { type: Number, default: () => Date.now() },
+  expiresAt: {
+    type: Number,
+    default: () => Date.now() + 30 * 24 * 60 * 60 * 1000,
+  },
 });
 
 const Sales = mongoose.model("Sales", salesSchema);
