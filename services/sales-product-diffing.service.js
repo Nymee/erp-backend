@@ -9,12 +9,12 @@ function diffProducts(existingProducts, incomingProducts) {
 
   // Index existing products by product_id
   for (const product of existingProducts) {
-    existingMap.set(product.product_id.toString(), product);
+    existingMap.set(product.productId.toString(), product);
   }
 
   // Compare incoming with existing
   for (const incoming of incomingProducts) {
-    const id = incoming.product_id.toString();
+    const id = incoming.productId.toString();
     const existing = existingMap.get(id);
 
     if (!existing) {

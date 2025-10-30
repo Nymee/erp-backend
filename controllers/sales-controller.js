@@ -80,10 +80,8 @@ const getSalesProducts = async (req, res, next) => {
 };
 
 const updateSales = async (req, res, next) => {
-  console.log("heheheheh");
   try {
     const estimation = await updateSalesWorkflow(req.body, req.params.sales_id);
-    console.log("heheheheh", estimation);
 
     await estimation.save();
 
@@ -91,6 +89,25 @@ const updateSales = async (req, res, next) => {
       message: "Sales estimation has been updated successfully",
       data: estimation,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getSalesById = async (req, res, next) => {
+  const companyId = req.token.company_id;
+  if (!companyId) {
+    return res.status(401).json({ error: "Company ID missing in token" });
+  }
+
+  try {
+    const data = await Sales.findById(req.params.sales_id);
+
+    if (!data) {
+      throw new error("Data not found");
+    }
+
+    res.status(200).json({ data: data });
   } catch (err) {
     next(err);
   }
@@ -110,4 +127,5 @@ module.exports = {
   dispatchProducts,
   getSalesProducts,
   getSales,
+  getSalesById,
 };
