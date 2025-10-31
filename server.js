@@ -8,6 +8,7 @@ const connectDB = require("./config/database");
 const productRoutes = require("./routes/product-routes");
 const salesRoutes = require("./routes/sales-routes");
 const clientRoutes = require("./routes/client-routes");
+const supplierRoutes = require("./routes/supplier-routes");
 const cors = require("cors");
 
 dotenv.config();
@@ -22,6 +23,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/sales", salesRoutes);
+app.use("/api/supplier", supplierRoutes);
+
 
 app.listen(process.env.PORT, () => {
   console.log("listening");

@@ -11,7 +11,7 @@ router.post(
   authorizeRoles("SAU"),
   userController.createUser 
 );
-router.get("/:user_id", userController.getUserById);
-router.patch("/:user_id", userController.updateUser);
+router.get("/:user_id", authenticateUser, userController.getUserById);
+router.patch("/:user_id", authenticateUser, userController.updateUser);
 
 module.exports = router;

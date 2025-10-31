@@ -1,5 +1,4 @@
 const express = require("express");
-const { verify } = require("jsonwebtoken");
 const router = express.Router();
 const companyController = require("../controllers/company-controller");
 const validate = require("../middlewares/validator");
@@ -9,6 +8,8 @@ const authorizeRoles = require("../middlewares/authorize-role");
 
 router.put(
   "/status_update/:id",
+  authenticateUser,
+  authorizeRoles("ADMIN"),
   validate(verifyCompanySchema),
   companyController.verifyCompany
 );

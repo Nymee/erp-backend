@@ -78,7 +78,28 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const tempPassword = Math.random().toString(36).slice(-8);
+    // Generate strong temporary password: 16 chars with uppercase, lowercase, numbers, and special chars
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const allChars = uppercase + lowercase + numbers + special;
+
+    let tempPassword = '';
+    // Ensure at least one character from each category
+    tempPassword += uppercase[Math.floor(Math.random() * uppercase.length)];
+    tempPassword += lowercase[Math.floor(Math.random() * lowercase.length)];
+    tempPassword += numbers[Math.floor(Math.random() * numbers.length)];
+    tempPassword += special[Math.floor(Math.random() * special.length)];
+
+    // Fill remaining 12 characters randomly
+    for (let i = 0; i < 12; i++) {
+      tempPassword += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+
+    // Shuffle the password to randomize character positions
+    tempPassword = tempPassword.split('').sort(() => Math.random() - 0.5).join('');
+
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     let user = new User({

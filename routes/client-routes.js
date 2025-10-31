@@ -14,7 +14,7 @@ router.post(
   authorizeRoles("SAU"),
   clientController.createClient
 );
-router.get("/:client_id", clientController.getClientById);
-router.patch("/:client_id", clientController.updateClient);
+router.get("/:client_id", authenticateUser, clientController.getClientById);
+router.patch("/:client_id", authenticateUser, clientController.updateClient);
 
 module.exports = router;
