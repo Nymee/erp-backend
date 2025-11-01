@@ -9,6 +9,7 @@ const productRoutes = require("./routes/product-routes");
 const salesRoutes = require("./routes/sales-routes");
 const clientRoutes = require("./routes/client-routes");
 const supplierRoutes = require("./routes/supplier-routes");
+const inventoryRoutes = require("./routes/inventory-routes");
 const cors = require("cors");
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use("/api/client", clientRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/supplier", supplierRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 
 app.listen(process.env.PORT, () => {
