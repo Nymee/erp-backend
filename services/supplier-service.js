@@ -27,8 +27,9 @@ async function getSupplierList({
 
     suppliers = await Supplier.find(filter, {
       name: 1,
-      email: 1,
-      phone: 1,
+      email_id: 1,
+      mobile: 1,
+      address:1
     })
       .sort({ [orderBy]: order === "asc" ? 1 : -1 })
       .skip((page - 1) * limit)
