@@ -2,9 +2,11 @@ const Product = require("../models/Product");
 const validateProduct = require("./product-validation.service");
 const Sales = require("../models/Sales");
 const { diffProducts } = require("./sales-product-diffing.service");
+const InventoryProduct = require("../models/InventoryProduct");
 
 async function createSalesWorkFlow(body) {
   const salesProducts = body.products;
+  const valid = checkInventoryStock(salesProducts);
   const so_discount = body.so_discount;
   const so_discount_type = body.so_discount_type;
 
@@ -255,6 +257,63 @@ function checkExpiry(products) {
     };
 }
 
+
+async function checkInventoryStock(salesProducts) {
+  // Extract product IDs from sales products
+  const productIds = salesProducts.map((p) => p.productId);
+
+  // Fetch inventory products for these product IDs
+  const inventoryProducts = await InventoryProduct.find({
+    productId: { $in: productIds },
+  }).lean();
+
+  // Create a map of productId to available quantity
+  const inventoryMap = new Map();
+  inventoryProducts.forEach((inv) => {
+    inventoryMap.set(inv.productId.toString(), inv.quantity);
+  });
+
+  // Check for out of stock products
+  const outOfStockProducts = [];
+
+  for (const salesProduct of salesProducts) {
+    const productId = salesProduct.productId.toString();
+    const requestedQuantity = salesProduct.quantity || 0;
+    const availableQuantity = inventoryMap.get(productId) || 0;
+
+    if (availableQuantity < requestedQuantity) {
+      // Fetch product name for better error message
+      const product = await Product.findById(productId).lean();
+      outOfStockProducts.push({
+        productId: productId,
+        productName: product ? product.name : productId,
+        requested: requestedQuantity,
+        available: availableQuantity,
+        shortage: requestedQuantity - availableQuantity,
+      });
+    }
+  }
+
+  // If there are out of stock products, throw an error
+  if (outOfStockProducts.length > 0) {
+    const errorMessages = outOfStockProducts.map(
+      (p) =>
+        `${p.productName} (requested: ${p.requested}, available: ${p.available}, short by: ${p.shortage})`
+    );
+
+    const error = new Error(
+      `The following products are out of stock and cannot be ordered: ${errorMessages.join(
+        ", "
+      )}`
+    );
+    error.status = 400;
+    error.outOfStockProducts = outOfStockProducts;
+    throw error;
+  }
+
+  return { success: true };
+}
+
 module.exports = {
   validateWithProductData,
   validateWithSalesData,
@@ -262,4 +321,5 @@ module.exports = {
   calculateSODiscountAmount,
   createSalesWorkFlow,
   updateSalesWorkflow,
+  checkInventoryStock
 };
