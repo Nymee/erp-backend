@@ -1,5 +1,8 @@
 const Inventory = require("../models/Inventory");
 const InventoryProduct = require("../models/InventoryProduct");
+const Product = require("../models/Product");
+const Supplier = require("../models/Supplier");
+const { getInventoryProductList } = require("../services/inventory-service");
 
 const getInventories = async (req, res, next) => {
   try {
@@ -30,11 +33,29 @@ const getInventoryById = async (req, res, next) => {
 
 const createInventory = async (req, res, next) => {
   try {
+        const companyId = req.token.company_id;
+    if (!companyId) {
+      return res.status(401).json({ error: "Company ID missing in token" });
+    }
+
     const { productId, supplierId, quantity, created_date } = req.body;
+
+      let product = await Product.findById(productId);
+      console.log(product, "prod")
+      let supplier = await Supplier.findById(supplierId);
+      if (!product) {
+  throw new Error(`Product not found for ID ${productId}`);
+}
+if (!supplier) {
+  throw new Error(`Supplier not found for ID ${supplierId}`);
+}
 
     // Create inventory record
     const inventory = new Inventory({
+      companyId,
       productId,
+      product_name: product.name,
+      supplier_name: supplier.name,
       supplierId,
       quantity,
       created_date,
@@ -57,8 +78,12 @@ const createInventory = async (req, res, next) => {
     } else {
       // Product doesn't exist, create new record
       inventoryProduct = new InventoryProduct({
+        companyId,
         productId,
         quantity,
+        product_name: product.name,
+        supplierId,
+      supplier_name: supplier.name,
         updated_date: created_date,
       });
       await inventoryProduct.save();
@@ -70,14 +95,31 @@ const createInventory = async (req, res, next) => {
   }
 };
 
+
 const getInventoryProducts = async (req, res, next) => {
   try {
-    const inventoryProducts = await InventoryProduct.find().populate("productId");
-    res.status(200).json(inventoryProducts);
+    console.log("INSIDEEEEE")
+    const companyId = req.token.company_id;
+    if (!companyId) {
+      return res.status(401).json({ error: "Company ID missing in token" });
+    }
+    const { page, limit, order, orderBy, search } = req.query;
+    const result = await getInventoryProductList({
+      companyId,
+      page,
+      limit,
+      order,
+      orderBy,
+      search,
+    });
+    console.log(result, "bleeeeeeeeee")
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 };
+
 
 const getInventoryProductById = async (req, res, next) => {
   try {

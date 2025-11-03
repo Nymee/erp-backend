@@ -7,6 +7,24 @@ const inventoryProductSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+      companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    supplierId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Supplier",
+    required: true,
+  },
+    product_name: {
+    type: String,
+    required: true,
+  },
+  supplier_name: {
+    type: String,
+    required: true,
+  },
   quantity: {
     type: Number,
     required: true,
