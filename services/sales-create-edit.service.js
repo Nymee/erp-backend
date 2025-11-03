@@ -6,7 +6,7 @@ const InventoryProduct = require("../models/InventoryProduct");
 
 async function createSalesWorkFlow(body) {
   const salesProducts = body.products;
-  const valid = checkInventoryStock(salesProducts);
+  await checkInventoryStock(salesProducts);
   const so_discount = body.so_discount;
   const so_discount_type = body.so_discount_type;
 
