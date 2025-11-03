@@ -1,6 +1,13 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const { buildFilter } = require("../utils/filter-builder");
+const { ManagementClient } = require("auth0");
+
+const management = new ManagementClient({
+  domain: process.env.AUTH0_DOMAIN,
+  clientId: process.env.AUTH0_M2M_CLIENT_ID,
+  clientSecret: process.env.AUTH0_M2M_CLIENT_SECRET,
+});
 
 const getUsers = async (req, res, next) => {
   try {
@@ -78,39 +85,48 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    // Generate strong temporary password: 16 chars with uppercase, lowercase, numbers, and special chars
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-    const allChars = uppercase + lowercase + numbers + special;
-
-    let tempPassword = '';
-    // Ensure at least one character from each category
-    tempPassword += uppercase[Math.floor(Math.random() * uppercase.length)];
-    tempPassword += lowercase[Math.floor(Math.random() * lowercase.length)];
-    tempPassword += numbers[Math.floor(Math.random() * numbers.length)];
-    tempPassword += special[Math.floor(Math.random() * special.length)];
-
-    // Fill remaining 12 characters randomly
-    for (let i = 0; i < 12; i++) {
-      tempPassword += allChars[Math.floor(Math.random() * allChars.length)];
-    }
-
-    // Shuffle the password to randomize character positions
-    tempPassword = tempPassword.split('').sort(() => Math.random() - 0.5).join('');
-
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-    let user = new User({
-      ...req.body,
-      password: hashedPassword,
-      temp_password: tempPassword,
-      companyId: req.token.company_id,
-      branchId: req.token.branch_id,
+    // 1️⃣ CREATE USER IN AUTH0 (no password)
+    const auth0User = await management.users.create({
+      email: req.body.email,
+      connection: "Username-Password-Authentication", // your DB connection name
+      email_verified: false,
+      name: req.body.name,
     });
+
+    // 2️⃣ CREATE PASSWORD SETUP (RESET) TICKET
+    const ticket = await management.tickets.changePassword({
+      user_id: auth0User.user_id,
+      result_url: "https://your-frontend.com/login", // redirect after password setup
+    });
+
+    // 3️⃣ CREATE USER IN MONGODB
+    const user = new User({
+      auth0Id: auth0User.user_id, // Link to Auth0
+      name: req.body.name,
+      email: req.body.email,
+      mobile: req.body.mobile,
+      role: req.body.role,
+      companyId: req.user.companyId, // From JWT
+      branchId: req.user.branchId, // From JWT
+    });
+
     await user.save();
-    res.status(201).json(user);
+
+    // 4️⃣ SEND EMAIL WITH PASSWORD SETUP LINK
+    // You can send this link via your own mail service (SES/SendGrid)
+    // or let Auth0 send it automatically (Auth0 usually sends it by default).
+    // If you prefer to send it yourself:
+    // await sendMail({
+    //   to: req.body.email,
+    //   subject: "Set up your account password",
+    //   text: `Welcome! Click here to set your password: ${ticket.ticket}`
+    // });
+
+    res.status(201).json({
+      message: "User created successfully. Password setup email sent.",
+      user,
+    });
+    AUTH0;
   } catch (error) {
     next(error);
   }

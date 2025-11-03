@@ -11,6 +11,7 @@ const clientRoutes = require("./routes/client-routes");
 const supplierRoutes = require("./routes/supplier-routes");
 const inventoryRoutes = require("./routes/inventory-routes");
 const cors = require("cors");
+const { validateJWT, extractUserInfo } = require("./middlewares/auth");
 
 dotenv.config();
 connectDB();
@@ -19,6 +20,10 @@ app.use(cors({ origin: "http://localhost:5173" }));
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+
+app.use(validateJWT);
+app.use(extractUserInfo);
+
 app.use("/api/company", companyRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/client", clientRoutes);
@@ -26,7 +31,6 @@ app.use("/api/product", productRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/supplier", supplierRoutes);
 app.use("/api/inventory", inventoryRoutes);
-
 
 app.listen(process.env.PORT, () => {
   console.log("listening");
