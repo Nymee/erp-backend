@@ -8,14 +8,12 @@ const authorizeRoles = require("../middlewares/authorize-role");
 
 router.put(
   "/status_update/:id",
-  authenticateUser,
   authorizeRoles("ADMIN"),
   validate(verifyCompanySchema),
   companyController.verifyCompany
 );
 router.get(
   "/",
-  authenticateUser,
   authorizeRoles("ADMIN"),
   companyController.getCompanies
 );

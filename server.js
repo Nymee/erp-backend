@@ -12,6 +12,7 @@ const supplierRoutes = require("./routes/supplier-routes");
 const inventoryRoutes = require("./routes/inventory-routes");
 const cors = require("cors");
 const { validateJWT, extractUserInfo } = require("./middlewares/auth");
+const User = require("./models/User");
 
 dotenv.config();
 connectDB();
@@ -19,6 +20,30 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 
 app.use(express.json());
+app.get('/api/auth0/users/:auth0Id', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  console.log(authHeader, "bleeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+  if (authHeader !== `Bearer ${process.env.ACTION_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const { auth0Id } = req.params;
+  
+  const user = await User.findOne({ auth0Id });
+
+
+  console.log(user, "blaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  res.json({
+    role: user.role,
+    companyId: user.companyId?.toString(),
+    branchId: user.branchId?.toString()
+  });
+});
 app.use("/api/auth", authRoutes);
 
 app.use(validateJWT);

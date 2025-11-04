@@ -4,15 +4,19 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const Branch = require("../models/Branch");
 const { buildFilter } = require("../utils/filter-builder");
-const { ManagementClient } = require("auth0");
+const { ManagementClient } = require('auth0');
+
+
+const verifyCompany = async (req, res) => {
 
 const management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_M2M_CLIENT_ID,
   clientSecret: process.env.AUTH0_M2M_CLIENT_SECRET,
+  audience: process.env.AUTH0_M2M_AUDIENCE
 });
 
-const verifyCompany = async (req, res) => {
+  console.log(process.env.AUTH0_M2M_CLIENT_ID,process.env.AUTH0_M2M_CLIENT_SECRET, "heeeeeeeeeeeeeehehehehheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
   try {
     const { isVerified } = req.body;
     const companyId = req.params.id;
@@ -28,17 +32,15 @@ const verifyCompany = async (req, res) => {
         .json({ message: "Company has already been updated" });
     }
 
-    company.isVerified = isVerified;
-    await company.save();
+    
 
     if (isVerified === "approved") {
-      // 1️⃣ Create default branch
       const branch = await Branch.create({
         name: "Head Office",
         companyId: company._id,
       });
 
-      // 2️⃣ Create user in Auth0 (no password)
+      // Create user in Auth0
       const auth0User = await management.users.create({
         email: company.user_email,
         connection: "Username-Password-Authentication",
@@ -46,15 +48,15 @@ const verifyCompany = async (req, res) => {
         name: company.user_name,
       });
 
-      // 3️⃣ Create password setup (reset) ticket
+      // Create password reset ticket
       const ticket = await management.tickets.changePassword({
-        user_id: auth0User.user_id,
-        result_url: "https://localhost:5173/login", // redirect after password setup
+        user_id: auth0User.user_id,  // Note: not auth0User.data.user_id
+        result_url: "http://localhost:5173/login",
       });
 
-      // 4️⃣ Save user in MongoDB linked to Auth0
+      // Save user in MongoDB
       await User.create({
-        auth0Id: auth0User.user_id,
+        auth0Id: auth0User.user_id,  // Note: not auth0User.data.user_id
         name: company.user_name,
         email: company.user_email,
         mobile: company.user_mobile,
@@ -63,7 +65,10 @@ const verifyCompany = async (req, res) => {
         companyId: company._id,
       });
 
-      console.log(ticket.ticket);
+      company.isVerified = isVerified;
+    await company.save();
+
+      console.log("Password reset ticket:", ticket.ticket);  // Note: not ticket.data.ticket
     }
 
     res.status(200).json({ message: `Company ${isVerified} successfully.` });
@@ -72,7 +77,6 @@ const verifyCompany = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 const getCompanies = async (req, res, next) => {
   try {
     let {
