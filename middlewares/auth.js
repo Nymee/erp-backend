@@ -13,9 +13,7 @@ const validateJWT = auth({
 });
 
 // Optional: Extract custom claims middleware
-const extractUserInfo = (req, res, next) => {
-  console.log(req.auth, "MLAAAAAAAAAAAAAAAAAAAAAAAAAA");
-  
+const extractUserInfo = (req, res, next) => {  
   // The decoded token is in req.auth.payload, not req.auth directly
   const payload = req.auth.payload;
   
@@ -26,7 +24,6 @@ const extractUserInfo = (req, res, next) => {
     branchId: payload["https://api.salesphere.com/branchId"],
   };
   
-  console.log(req.token, "H;LAAAAAAAAAAAAAAAAAAA");
   next();
 };
 

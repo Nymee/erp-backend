@@ -22,7 +22,6 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 app.get('/api/auth0/users/:auth0Id', async (req, res) => {
   const authHeader = req.headers.authorization;
-  console.log(authHeader, "bleeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
   if (authHeader !== `Bearer ${process.env.ACTION_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -30,9 +29,6 @@ app.get('/api/auth0/users/:auth0Id', async (req, res) => {
   const { auth0Id } = req.params;
   
   const user = await User.findOne({ auth0Id });
-
-
-  console.log(user, "blaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
   
   if (!user) {
     return res.status(404).json({ error: 'User not found' });

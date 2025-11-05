@@ -7,8 +7,6 @@ const authorizeRoles = (...allowedRoles) => {
       return next(new ForbiddenError("Forbidden: No user context"));
     }
 
-    console.log(req.token, "GLAGLAGLAAAAAAAAAAAAAAAAAAAA")
-
     if (!allowedRoles.includes(req.token.role)) {
       return next(new ForbiddenError("Forbidden: Insufficient role"));
     }

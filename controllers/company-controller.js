@@ -39,14 +39,18 @@ const management = new ManagementClient({
         name: "Head Office",
         companyId: company._id,
       });
+      const tempPassword = Math.random().toString(36).slice(-8) + "Aa1!";
+
 
       // Create user in Auth0
       const auth0User = await management.users.create({
         email: company.user_email,
+        password: tempPassword,
         connection: "Username-Password-Authentication",
         email_verified: false,
         name: company.user_name,
       });
+      console.log(auth0User, "HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ")
 
       // Create password reset ticket
       const ticket = await management.tickets.changePassword({
@@ -61,7 +65,7 @@ const management = new ManagementClient({
         email: company.user_email,
         mobile: company.user_mobile,
         role: "SAU",
-        branchId: branch._id,
+        branchId: branch._id, 
         companyId: company._id,
       });
 
