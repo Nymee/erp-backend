@@ -12,6 +12,7 @@ const companySchema = new mongoose.Schema({
     enum: ["approved", "pending", "rejected"],
     default: "pending",
   },
+  
 });
 
 const Company = mongoose.model("Company", companySchema);

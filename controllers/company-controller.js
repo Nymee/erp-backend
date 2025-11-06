@@ -4,19 +4,21 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const Branch = require("../models/Branch");
 const { buildFilter } = require("../utils/filter-builder");
-const { ManagementClient } = require('auth0');
-
+const { ManagementClient } = require("auth0");
 
 const verifyCompany = async (req, res) => {
+  const management = new ManagementClient({
+    domain: process.env.AUTH0_DOMAIN,
+    clientId: process.env.AUTH0_M2M_CLIENT_ID,
+    clientSecret: process.env.AUTH0_M2M_CLIENT_SECRET,
+    audience: process.env.AUTH0_M2M_AUDIENCE,
+  });
 
-const management = new ManagementClient({
-  domain: process.env.AUTH0_DOMAIN,
-  clientId: process.env.AUTH0_M2M_CLIENT_ID,
-  clientSecret: process.env.AUTH0_M2M_CLIENT_SECRET,
-  audience: process.env.AUTH0_M2M_AUDIENCE
-});
-
-  console.log(process.env.AUTH0_M2M_CLIENT_ID,process.env.AUTH0_M2M_CLIENT_SECRET, "heeeeeeeeeeeeeehehehehheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+  console.log(
+    process.env.AUTH0_M2M_CLIENT_ID,
+    process.env.AUTH0_M2M_CLIENT_SECRET,
+    "heeeeeeeeeeeeeehehehehheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  );
   try {
     const { isVerified } = req.body;
     const companyId = req.params.id;
@@ -32,15 +34,13 @@ const management = new ManagementClient({
         .json({ message: "Company has already been updated" });
     }
 
-    
-
     if (isVerified === "approved") {
       const branch = await Branch.create({
         name: "Head Office",
         companyId: company._id,
       });
-      const tempPassword = Math.random().toString(36).slice(-8) + "Aa1!";
 
+      const tempPassword = Math.random().toString(36).slice(-8) + "Aa1!";
 
       // Create user in Auth0
       const auth0User = await management.users.create({
@@ -50,29 +50,31 @@ const management = new ManagementClient({
         email_verified: false,
         name: company.user_name,
       });
-      console.log(auth0User, "HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ")
 
       // Create password reset ticket
       const ticket = await management.tickets.changePassword({
-        user_id: auth0User.user_id,  // Note: not auth0User.data.user_id
+        user_id: auth0User.user_id,
         result_url: "http://localhost:5173/login",
       });
 
       // Save user in MongoDB
       await User.create({
-        auth0Id: auth0User.user_id,  // Note: not auth0User.data.user_id
+        auth0Id: auth0User.user_id,
         name: company.user_name,
         email: company.user_email,
         mobile: company.user_mobile,
         role: "SAU",
-        branchId: branch._id, 
+        branchId: branch._id,
         companyId: company._id,
       });
 
-      company.isVerified = isVerified;
-    await company.save();
+      company.isVerified = "approved";
+      await company.save();
 
-      console.log("Password reset ticket:", ticket.ticket);  // Note: not ticket.data.ticket
+      console.log("Password reset ticket:", ticket.ticket);
+    } else if (isVerified === "rejected") {
+      company.isVerified = "rejected";
+      await company.save();
     }
 
     res.status(200).json({ message: `Company ${isVerified} successfully.` });
