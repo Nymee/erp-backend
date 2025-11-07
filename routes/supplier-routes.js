@@ -4,9 +4,16 @@ const supplierController = require("../controllers/supplier-controller");
 const authenticateUser = require("../middlewares/authenticate-user");
 const authorizeRoles = require("../middlewares/authorize-role");
 const validate = require("../middlewares/validator");
-const { createSupplierSchema, updateSupplierSchema } = require("../validators/supplier.validator");
+const {
+  createSupplierSchema,
+  updateSupplierSchema,
+} = require("../validators/supplier.validator");
 
-router.get("/", validate(createSupplierSchema),authenticateUser, supplierController.getSuppliers);
+router.get(
+  "/",
+  validate(createSupplierSchema),
+  supplierController.getSuppliers
+);
 router.post(
   "/",
   validate(updateSupplierSchema),
@@ -14,7 +21,15 @@ router.post(
   authorizeRoles("SAU"),
   supplierController.createSupplier
 );
-router.get("/:supplier_id", authenticateUser, supplierController.getSupplierById);
-router.patch("/:supplier_id", authenticateUser, supplierController.updateSupplier);
+router.get(
+  "/:supplier_id",
+  authenticateUser,
+  supplierController.getSupplierById
+);
+router.patch(
+  "/:supplier_id",
+  authenticateUser,
+  supplierController.updateSupplier
+);
 
 module.exports = router;

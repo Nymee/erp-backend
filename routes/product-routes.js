@@ -13,7 +13,7 @@ const {
   deleteProduct,
 } = require("../controllers/product-controller");
 
-router.get("/", authenticateUser, getProducts);
+router.get("/", getProducts);
 router.post(
   "/",
   authenticateUser,
@@ -26,6 +26,6 @@ router.patch(
   validate(updateProductSchema),
   updateProduct
 );
-router.delete("/:product_id", authenticateUser, deleteProduct);
+router.delete("/:product_id", deleteProduct);
 
 module.exports = router;
