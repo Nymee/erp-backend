@@ -11,7 +11,7 @@ const management = new ManagementClient({
 
 const getUsers = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       throw new Error();
     }

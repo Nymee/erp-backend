@@ -2,7 +2,7 @@ const Client = require("../models/Client");
 const { getClientList } = require("../services/client-service");
 const getClients = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -62,8 +62,8 @@ const createClient = async (req, res, next) => {
   try {
     const client = new Client({
       ...req.body,
-      companyId: req.token.company_id,
-      branchId: req.token.branch_id,
+      companyId: req.token.companyId,
+      branchId: req.token.branchId,
     });
     await client.save();
     res.status(201).json(client);
