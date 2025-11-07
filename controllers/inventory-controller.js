@@ -33,22 +33,22 @@ const getInventoryById = async (req, res, next) => {
 
 const createInventory = async (req, res, next) => {
   try {
-        const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
 
     const { productId, supplierId, quantity, created_date } = req.body;
 
-      let product = await Product.findById(productId);
-      console.log(product, "prod")
-      let supplier = await Supplier.findById(supplierId);
-      if (!product) {
-  throw new Error(`Product not found for ID ${productId}`);
-}
-if (!supplier) {
-  throw new Error(`Supplier not found for ID ${supplierId}`);
-}
+    let product = await Product.findById(productId);
+    console.log(product, "prod");
+    let supplier = await Supplier.findById(supplierId);
+    if (!product) {
+      throw new Error(`Product not found for ID ${productId}`);
+    }
+    if (!supplier) {
+      throw new Error(`Supplier not found for ID ${supplierId}`);
+    }
 
     // Create inventory record
     const inventory = new Inventory({
@@ -83,7 +83,7 @@ if (!supplier) {
         quantity,
         product_name: product.name,
         supplierId,
-      supplier_name: supplier.name,
+        supplier_name: supplier.name,
         updated_date: created_date,
       });
       await inventoryProduct.save();
@@ -95,11 +95,10 @@ if (!supplier) {
   }
 };
 
-
 const getInventoryProducts = async (req, res, next) => {
   try {
-    console.log("INSIDEEEEE")
-    const companyId = req.token.company_id;
+    console.log("INSIDEEEEE");
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -112,7 +111,7 @@ const getInventoryProducts = async (req, res, next) => {
       orderBy,
       search,
     });
-    console.log(result, "bleeeeeeeeee")
+    console.log(result, "bleeeeeeeeee");
 
     res.status(200).json(result);
   } catch (err) {
@@ -120,10 +119,11 @@ const getInventoryProducts = async (req, res, next) => {
   }
 };
 
-
 const getInventoryProductById = async (req, res, next) => {
   try {
-    const inventoryProduct = await InventoryProduct.findById(req.params.inventory_product_id).populate("productId");
+    const inventoryProduct = await InventoryProduct.findById(
+      req.params.inventory_product_id
+    ).populate("productId");
     if (!inventoryProduct) {
       const error = new Error("No such inventory product");
       error.status = 404;

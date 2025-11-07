@@ -15,12 +15,12 @@ const {
   updateSOE,
 } = require("../validators/sales-order.validator");
 
-router.post("/dispatch", authenticateUser, dispatchProducts);
-router.post("/", authenticateUser, validator(createSOESchema), createSales);
-router.get("/product", authenticateUser, getSalesProducts);
-router.get("/", authenticateUser, getSales);
-router.get("/:sales_id", authenticateUser, getSalesById);
+router.post("/dispatch", dispatchProducts);
+router.post("/", validator(createSOESchema), createSales);
+router.get("/product", getSalesProducts);
+router.get("/", getSales);
+router.get("/:sales_id", getSalesById);
 
-router.put("/:sales_id", authenticateUser, updateSales);
+router.put("/:sales_id", updateSales);
 
 module.exports = router;

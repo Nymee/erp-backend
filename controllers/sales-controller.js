@@ -10,7 +10,7 @@ const { getSalesList } = require("../services/sales-service");
 
 const createSales = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
 
     const data = await createSalesWorkFlow(req.body);
     const client = await Client.findById(req.body.clientId).lean();
@@ -34,7 +34,7 @@ const createSales = async (req, res, next) => {
 
 const getSales = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -57,7 +57,7 @@ const getSales = async (req, res, next) => {
 
 const getSalesProducts = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -95,7 +95,7 @@ const updateSales = async (req, res, next) => {
 };
 
 const getSalesById = async (req, res, next) => {
-  const companyId = req.token.company_id;
+  const companyId = req.token.companyId;
   if (!companyId) {
     return res.status(401).json({ error: "Company ID missing in token" });
   }

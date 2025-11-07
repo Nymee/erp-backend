@@ -6,7 +6,7 @@ const authorizeRoles = require("../middlewares/authorize-role");
 const validate = require("../middlewares/validator");
 const { createInventorySchema } = require("../validators/inventory.validator");
 
-router.get("/", authenticateUser, inventoryController.getInventories);
+router.get("/", inventoryController.getInventories);
 router.post(
   "/",
   validate(createInventorySchema),
@@ -14,8 +14,11 @@ router.post(
   authorizeRoles("SAU"),
   inventoryController.createInventory
 );
-router.get("/products", authenticateUser, inventoryController.getInventoryProducts);
-router.get("/products/:inventory_product_id", authenticateUser, inventoryController.getInventoryProductById);
-router.get("/:inventory_id", authenticateUser, inventoryController.getInventoryById);
+router.get("/products", inventoryController.getInventoryProducts);
+router.get(
+  "/products/:inventory_product_id",
+  inventoryController.getInventoryProductById
+);
+router.get("/:inventory_id", inventoryController.getInventoryById);
 
 module.exports = router;

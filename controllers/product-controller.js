@@ -3,7 +3,7 @@ const validateProduct = require("../services/product-validation.service");
 const { getProductList } = require("../services/product-service");
 const getProducts = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -61,7 +61,7 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     const productId = req.params.product_id;
 
     const product = await Product.findOne({ _id: productId, companyId }); //this is a mongoose document object. never overwrite it with a plain object, it will lose its save like functionalities.

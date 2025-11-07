@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema(
       },
     },
     password: String,
-    temp_password: String
+    temp_password: String,
+    auth0Id: {type:String, required: true}
   },
   { timestamps: true }
 );

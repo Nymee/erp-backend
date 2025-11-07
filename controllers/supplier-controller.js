@@ -2,7 +2,7 @@ const Supplier = require("../models/Supplier");
 const { getSupplierList } = require("../services/supplier-service");
 const getSuppliers = async (req, res, next) => {
   try {
-    const companyId = req.token.company_id;
+    const companyId = req.token.companyId;
     if (!companyId) {
       return res.status(401).json({ error: "Company ID missing in token" });
     }
@@ -62,8 +62,8 @@ const createSupplier = async (req, res, next) => {
   try {
     const supplier = new Supplier({
       ...req.body,
-      companyId: req.token.company_id,
-      branchId: req.token.branch_id,
+      companyId: req.token.companyId,
+      branchId: req.token.branchId,
     });
     await supplier.save();
     res.status(201).json(supplier);

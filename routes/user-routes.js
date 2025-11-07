@@ -4,14 +4,14 @@ const userController = require("../controllers/user-controller");
 const authenticateUser = require("../middlewares/authenticate-user");
 const authorizeRoles = require("../middlewares/authorize-role");
 
-router.get("/", authenticateUser, userController.getUsers);
+router.get("/", userController.getUsers);
 router.post(
   "/",
   authenticateUser,
   authorizeRoles("SAU"),
-  userController.createUser 
+  userController.createUser
 );
-router.get("/:user_id", authenticateUser, userController.getUserById);
-router.patch("/:user_id", authenticateUser, userController.updateUser);
+router.get("/:user_id", userController.getUserById);
+router.patch("/:user_id", userController.updateUser);
 
 module.exports = router;
