@@ -257,20 +257,29 @@ function checkExpiry(products) {
     };
 }
 
-
 async function checkInventoryStock(salesProducts) {
   // Extract product IDs from sales products
   const productIds = salesProducts.map((p) => p.productId);
 
-  // Fetch inventory products for these product IDs
-  const inventoryProducts = await InventoryProduct.find({
-    productId: { $in: productIds },
-  }).lean();
+  // Fetch ALL data in parallel (was an N+1 query problem)
+  const [inventoryProducts, products] = await Promise.all([
+    InventoryProduct.find({
+      productId: { $in: productIds },
+    }).lean(),
+    Product.find({
+      _id: { $in: productIds },
+    }).lean(),
+  ]);
 
-  // Create a map of productId to available quantity
+  // Create maps for O(1) lookup instead of DB calls in loop
   const inventoryMap = new Map();
   inventoryProducts.forEach((inv) => {
     inventoryMap.set(inv.productId.toString(), inv.quantity);
+  });
+
+  const productMap = new Map();
+  products.forEach((prod) => {
+    productMap.set(prod._id.toString(), prod.name);
   });
 
   // Check for out of stock products
@@ -282,11 +291,11 @@ async function checkInventoryStock(salesProducts) {
     const availableQuantity = inventoryMap.get(productId) || 0;
 
     if (availableQuantity < requestedQuantity) {
-      // Fetch product name for better error message
-      const product = await Product.findById(productId).lean();
+      // ✅ O(1) Map lookup instead of DB query
+      const productName = productMap.get(productId) || productId;
       outOfStockProducts.push({
         productId: productId,
-        productName: product ? product.name : productId,
+        productName: productName,
         requested: requestedQuantity,
         available: availableQuantity,
         shortage: requestedQuantity - availableQuantity,
@@ -321,5 +330,5 @@ module.exports = {
   calculateSODiscountAmount,
   createSalesWorkFlow,
   updateSalesWorkflow,
-  checkInventoryStock
+  checkInventoryStock,
 };

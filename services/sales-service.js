@@ -26,20 +26,22 @@ async function getSalesList({
 
   console.log("fillll", filter);
 
-  const sales = await Sales.find(filter, {
-    name: 1,
-    client_name: 1,
-    clientId: 1,
-    order_no: 1,
-    grand_total: 1,
-    products: 1,
-    type: 1,
-  })
-    .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  const total = await Sales.countDocuments(filter);
+  // Run query and count in parallel (was: sequential)
+  const [sales, total] = await Promise.all([
+    Sales.find(filter, {
+      name: 1,
+      client_name: 1,
+      clientId: 1,
+      order_no: 1,
+      grand_total: 1,
+      products: 1,
+      type: 1,
+    })
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Sales.countDocuments(filter),
+  ]);
 
   return {
     data: sales,

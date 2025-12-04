@@ -18,27 +18,28 @@ async function getProductList({
     baseFilter: { companyId },
   });
 
-  const products = await Product.find(filter, {
-    name: 1,
-    cost_price: 1,
-    retail_margin: 1,
-    discount_price: 1,
-    gst: 1,
-    cess: 1,
-    sales_price: 1,
-  })
-    .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  const total = await Product.countDocuments(filter);
+  // Run query and count in parallel (was sequential)
+  const [products, total] = await Promise.all([
+    Product.find(filter, {
+      name: 1,
+      cost_price: 1,
+      retail_margin: 1,
+      discount_price: 1,
+      gst: 1,
+      cess: 1,
+      sales_price: 1,
+    })
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Product.countDocuments(filter),
+  ]);
 
   return {
     data: products,
-   total
+    total,
   };
 }
-
 
 async function getSalesProductList({
   companyId,
@@ -48,9 +49,7 @@ async function getSalesProductList({
   orderBy = "name",
   search = "",
 }) {
-
-
-  console.log("HIT")
+  console.log("HIT");
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
 
@@ -60,25 +59,27 @@ async function getSalesProductList({
     baseFilter: { companyId },
   });
 
-  const products = await Product.find(filter, {
-    name: 1,
-    cost_price: 1,
-    retail_margin: 1,
-    discount: 1,
-    margin_unit: "rup",
-    gst: 1,
-    cess: 1,
-    sales_price: 1,
-  })
-    .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  const total = await Product.countDocuments(filter);
+  // ✅ OPTIMIZED: Run query and count in parallel (was: sequential)
+  const [products, total] = await Promise.all([
+    Product.find(filter, {
+      name: 1,
+      cost_price: 1,
+      retail_margin: 1,
+      discount: 1,
+      margin_unit: "rup",
+      gst: 1,
+      cess: 1,
+      sales_price: 1,
+    })
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Product.countDocuments(filter),
+  ]);
 
   return {
     data: products,
-    total
+    total,
   };
 }
 

@@ -14,33 +14,41 @@ async function getClientList({
   let filter = {};
 
   if (dropdown) {
-    const clients = await Client.find({}, { name: 1 });
+    clients = await Client.find({}, { name: 1 });
+    const total = await Client.countDocuments({});
+
+    return {
+      data: clients,
+      total,
+    };
   } else {
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
 
     filter = buildFilter({
       search,
-      fields: ["name", "email"], // or whichever fields you allow searching
+      fields: ["name", "email"],
       baseFilter: { companyId },
     });
 
-    clients = await Client.find(filter, {
-      name: 1,
-      email: 1,
-      phone: 1,
-    })
-      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    //Run query and count in parallel (was sequential)
+    const [clients, total] = await Promise.all([
+      Client.find(filter, {
+        name: 1,
+        email: 1,
+        phone: 1,
+      })
+        .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Client.countDocuments(filter),
+    ]);
+
+    return {
+      data: clients,
+      total,
+    };
   }
-
-  const total = await Client.countDocuments(filter);
-
-  return {
-    data: clients,
-    total,
-  };
 }
 
 module.exports = { getClientList };

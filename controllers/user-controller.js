@@ -32,13 +32,16 @@ const getUsers = async (req, res, next) => {
       baseFilter: { companyId },
     });
 
-    const users = await User.find(filter)
-      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    // Run query and count in parallel (was: sequential)
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      User.countDocuments(filter),
+    ]);
 
-    console.log(`Fetched ${users} users from DB`);
-    const total = await User.countDocuments(filter);
+    console.log(`Fetched ${users.length} users from DB`);
 
     const data = {
       data: users,
@@ -85,32 +88,33 @@ const updateUser = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    // 1️⃣ CREATE USER IN AUTH0 (no password)
+    // 1️⃣ CREATE USER IN AUTH0 (no password) - must succeed first
     const auth0User = await management.users.create({
       email: req.body.email,
-      connection: "Username-Password-Authentication", // your DB connection name
+      connection: "Username-Password-Authentication",
       email_verified: false,
       name: req.body.name,
     });
 
-    // 2️⃣ CREATE PASSWORD SETUP (RESET) TICKET
-    const ticket = await management.tickets.changePassword({
-      user_id: auth0User.user_id,
-      result_url: "https://your-frontend.com/login", // redirect after password setup
-    });
-
-    // 3️⃣ CREATE USER IN MONGODB
+    // 2️⃣ CREATE USER OBJECT
     const user = new User({
-      auth0Id: auth0User.user_id, // Link to Auth0
+      auth0Id: auth0User.user_id,
       name: req.body.name,
       email: req.body.email,
       mobile: req.body.mobile,
       role: req.body.role,
-      companyId: req.user.companyId, // From JWT
-      branchId: req.user.branchId, // From JWT
+      companyId: req.token.companyId,
+      branchId: req.token.branchId,
     });
 
-    await user.save();
+    // ✅ OPTIMIZED: Run ticket generation + MongoDB save in parallel (was: sequential)
+    const [ticket, savedUser] = await Promise.all([
+      management.tickets.changePassword({
+        user_id: auth0User.user_id,
+        result_url: "https://your-frontend.com/login",
+      }),
+      user.save(),
+    ]);
 
     // 4️⃣ SEND EMAIL WITH PASSWORD SETUP LINK
     // You can send this link via your own mail service (SES/SendGrid)
