@@ -35,7 +35,7 @@ const verifyCompany = async (req, res) => {
     }
 
     if (isVerified === "approved") {
-      // STEP 1: Critical operations that must succeed
+      // Critical operations that must succeed
       const branch = await Branch.create({
         name: "Head Office",
         companyId: company._id,
@@ -52,50 +52,61 @@ const verifyCompany = async (req, res) => {
         name: company.user_name,
       });
 
-      // ✅ OPTIMIZED: Run ticket + MongoDB user + company update in parallel
+      //Run ticket + MongoDB user + company update in parallel
       // Using Promise.allSettled to handle partial failures gracefully
-      const [ticketResult, userResult, companyUpdateResult] = await Promise.allSettled([
-        management.tickets.changePassword({
-          user_id: auth0User.user_id,
-          result_url: "http://localhost:5173/login",
-        }),
-        User.create({
-          auth0Id: auth0User.user_id,
-          name: company.user_name,
-          email: company.user_email,
-          mobile: company.user_mobile,
-          role: "SAU",
-          branchId: branch._id,
-          companyId: company._id,
-        }),
-        (async () => {
-          company.isVerified = "approved";
-          return company.save();
-        })()
-      ]);
+      const [ticketResult, userResult, companyUpdateResult] =
+        await Promise.allSettled([
+          management.tickets.changePassword({
+            user_id: auth0User.user_id,
+            result_url: "http://localhost:5173/login",
+          }),
+          User.create({
+            auth0Id: auth0User.user_id,
+            name: company.user_name,
+            email: company.user_email,
+            mobile: company.user_mobile,
+            role: "SAU",
+            branchId: branch._id,
+            companyId: company._id,
+          }),
+          (async () => {
+            company.isVerified = "approved";
+            return company.save();
+          })(),
+        ]);
 
       // Handle results - ticket creation can fail, but user must succeed
       let ticketUrl = null;
-      if (ticketResult.status === 'fulfilled') {
+      if (ticketResult.status === "fulfilled") {
         ticketUrl = ticketResult.value.ticket;
         console.log("Password reset ticket:", ticketUrl);
       } else {
-        console.error("Failed to create password reset ticket:", ticketResult.reason);
+        console.error(
+          "Failed to create password reset ticket:",
+          ticketResult.reason
+        );
         // User can still login with the temp password, or admin can reset manually
       }
 
       // User creation is critical - must succeed
-      if (userResult.status === 'rejected') {
-        console.error("CRITICAL: Failed to create MongoDB user:", userResult.reason);
+      if (userResult.status === "rejected") {
+        console.error(
+          "CRITICAL: Failed to create MongoDB user:",
+          userResult.reason
+        );
         throw new Error(`Failed to create user: ${userResult.reason.message}`);
       }
 
-      // Company update is critical - must succeed
-      if (companyUpdateResult.status === 'rejected') {
-        console.error("CRITICAL: Failed to update company:", companyUpdateResult.reason);
-        throw new Error(`Failed to update company status: ${companyUpdateResult.reason.message}`);
+      // Company update is critical
+      if (companyUpdateResult.status === "rejected") {
+        console.error(
+          "CRITICAL: Failed to update company:",
+          companyUpdateResult.reason
+        );
+        throw new Error(
+          `Failed to update company status: ${companyUpdateResult.reason.message}`
+        );
       }
-
     } else if (isVerified === "rejected") {
       company.isVerified = "rejected";
       await company.save();
@@ -133,7 +144,7 @@ const getCompanies = async (req, res, next) => {
         .sort({ [orderBy]: order === "asc" ? 1 : -1 })
         .skip((page - 1) * limit)
         .limit(limit),
-      Company.countDocuments(filter)
+      Company.countDocuments(filter),
     ]);
 
     const data = {
