@@ -14,7 +14,6 @@ async function getSupplierList({
   let filter = {};
 
   if (dropdown) {
-    // ✅ FIXED: Variable shadowing bug - removed 'const'
     suppliers = await Supplier.find({}, { name: 1 });
     const total = await Supplier.countDocuments({});
 
@@ -32,18 +31,17 @@ async function getSupplierList({
       baseFilter: { companyId },
     });
 
-    // ✅ OPTIMIZED: Run query and count in parallel (was: sequential)
     const [suppliers, total] = await Promise.all([
       Supplier.find(filter, {
         name: 1,
         email_id: 1,
         mobile: 1,
-        address: 1
+        address: 1,
       })
         .sort({ [orderBy]: order === "asc" ? 1 : -1 })
         .skip((page - 1) * limit)
         .limit(limit),
-      Supplier.countDocuments(filter)
+      Supplier.countDocuments(filter),
     ]);
 
     return {
