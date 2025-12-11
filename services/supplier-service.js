@@ -14,34 +14,41 @@ async function getSupplierList({
   let filter = {};
 
   if (dropdown) {
-    const suppliers = await Supplier.find({}, { name: 1 });
+    suppliers = await Supplier.find({}, { name: 1 });
+    const total = await Supplier.countDocuments({});
+
+    return {
+      data: suppliers,
+      total,
+    };
   } else {
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
 
     filter = buildFilter({
       search,
-      fields: ["name", "email"], // or whichever fields you allow searching
+      fields: ["name", "email"],
       baseFilter: { companyId },
     });
 
-    suppliers = await Supplier.find(filter, {
-      name: 1,
-      email_id: 1,
-      mobile: 1,
-      address:1
-    })
-      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const [suppliers, total] = await Promise.all([
+      Supplier.find(filter, {
+        name: 1,
+        email_id: 1,
+        mobile: 1,
+        address: 1,
+      })
+        .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Supplier.countDocuments(filter),
+    ]);
+
+    return {
+      data: suppliers,
+      total,
+    };
   }
-
-  const total = await Supplier.countDocuments(filter);
-
-  return {
-    data: suppliers,
-    total,
-  };
 }
 
 module.exports = { getSupplierList };

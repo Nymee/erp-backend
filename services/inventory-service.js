@@ -18,17 +18,19 @@ async function getInventoryProductList({
     baseFilter: { companyId },
   });
 
-  const inventoryProducts = await InventoryProduct.find(filter, {
-    product_name: 1,
-    supplier_name: 1,
-    quantity: 1,
-    updated_date: 1,
-  })
-    .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  const total = await InventoryProduct.countDocuments(filter);
+  //Run query and count in parallel
+  const [inventoryProducts, total] = await Promise.all([
+    InventoryProduct.find(filter, {
+      product_name: 1,
+      supplier_name: 1,
+      quantity: 1,
+      updated_date: 1,
+    })
+      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    InventoryProduct.countDocuments(filter),
+  ]);
 
   return {
     data: inventoryProducts,

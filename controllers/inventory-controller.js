@@ -40,9 +40,14 @@ const createInventory = async (req, res, next) => {
 
     const { productId, supplierId, quantity, created_date } = req.body;
 
-    let product = await Product.findById(productId);
+    //Fetch product and supplier in parallel (was: sequential)
+    const [product, supplier] = await Promise.all([
+      Product.findById(productId),
+      Supplier.findById(supplierId),
+    ]);
+
     console.log(product, "prod");
-    let supplier = await Supplier.findById(supplierId);
+
     if (!product) {
       throw new Error(`Product not found for ID ${productId}`);
     }

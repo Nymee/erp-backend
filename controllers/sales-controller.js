@@ -12,8 +12,19 @@ const createSales = async (req, res, next) => {
   try {
     const companyId = req.token.companyId;
 
-    const data = await createSalesWorkFlow(req.body);
-    const client = await Client.findById(req.body.clientId).lean();
+    // ✅ OPTIMIZED: Run workflow and client fetch in parallel (was: sequential)
+    const [data, client] = await Promise.all([
+      createSalesWorkFlow(req.body),
+      Client.findById(req.body.clientId).lean()
+    ]);
+
+    // Validate client exists
+    if (!client) {
+      const error = new Error(`Client with ID ${req.body.clientId} not found`);
+      error.status = 404;
+      throw error;
+    }
+
     const orderNumber = `SO-${uuidv4().slice(0, 8).toUpperCase()}`; // e.g., SO-4F7A9B1C
 
     const newSales = new Sales({

@@ -35,6 +35,7 @@ const verifyCompany = async (req, res) => {
     }
 
     if (isVerified === "approved") {
+      // Critical operations that must succeed
       const branch = await Branch.create({
         name: "Head Office",
         companyId: company._id,
@@ -42,7 +43,7 @@ const verifyCompany = async (req, res) => {
 
       const tempPassword = Math.random().toString(36).slice(-8) + "Aa1!";
 
-      // Create user in Auth0
+      // Create user in Auth0 (must succeed)
       const auth0User = await management.users.create({
         email: company.user_email,
         password: tempPassword,
@@ -51,27 +52,61 @@ const verifyCompany = async (req, res) => {
         name: company.user_name,
       });
 
-      // Create password reset ticket
-      const ticket = await management.tickets.changePassword({
-        user_id: auth0User.user_id,
-        result_url: "http://localhost:5173/login",
-      });
+      //Run ticket + MongoDB user + company update in parallel
+      // Using Promise.allSettled to handle partial failures gracefully
+      const [ticketResult, userResult, companyUpdateResult] =
+        await Promise.allSettled([
+          management.tickets.changePassword({
+            user_id: auth0User.user_id,
+            result_url: "http://localhost:5173/login",
+          }),
+          User.create({
+            auth0Id: auth0User.user_id,
+            name: company.user_name,
+            email: company.user_email,
+            mobile: company.user_mobile,
+            role: "SAU",
+            branchId: branch._id,
+            companyId: company._id,
+          }),
+          (async () => {
+            company.isVerified = "approved";
+            return company.save();
+          })(),
+        ]);
 
-      // Save user in MongoDB
-      await User.create({
-        auth0Id: auth0User.user_id,
-        name: company.user_name,
-        email: company.user_email,
-        mobile: company.user_mobile,
-        role: "SAU",
-        branchId: branch._id,
-        companyId: company._id,
-      });
+      // Handle results - ticket creation can fail, but user must succeed
+      let ticketUrl = null;
+      if (ticketResult.status === "fulfilled") {
+        ticketUrl = ticketResult.value.ticket;
+        console.log("Password reset ticket:", ticketUrl);
+      } else {
+        console.error(
+          "Failed to create password reset ticket:",
+          ticketResult.reason
+        );
+        // User can still login with the temp password, or admin can reset manually
+      }
 
-      company.isVerified = "approved";
-      await company.save();
+      // User creation is critical - must succeed
+      if (userResult.status === "rejected") {
+        console.error(
+          "CRITICAL: Failed to create MongoDB user:",
+          userResult.reason
+        );
+        throw new Error(`Failed to create user: ${userResult.reason.message}`);
+      }
 
-      console.log("Password reset ticket:", ticket.ticket);
+      // Company update is critical
+      if (companyUpdateResult.status === "rejected") {
+        console.error(
+          "CRITICAL: Failed to update company:",
+          companyUpdateResult.reason
+        );
+        throw new Error(
+          `Failed to update company status: ${companyUpdateResult.reason.message}`
+        );
+      }
     } else if (isVerified === "rejected") {
       company.isVerified = "rejected";
       await company.save();
@@ -103,12 +138,14 @@ const getCompanies = async (req, res, next) => {
       baseFilter: { isVerified },
     });
 
-    const companies = await Company.find(filter)
-      .sort({ [orderBy]: order === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    const total = await Company.countDocuments(filter);
+    // ✅ OPTIMIZED: Run query and count in parallel (was: sequential)
+    const [companies, total] = await Promise.all([
+      Company.find(filter)
+        .sort({ [orderBy]: order === "asc" ? 1 : -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Company.countDocuments(filter),
+    ]);
 
     const data = {
       data: companies,
