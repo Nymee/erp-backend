@@ -17,9 +17,55 @@ const User = require("./models/User");
 dotenv.config();
 connectDB();
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
-
+app.use(cors({
+  origin: [
+    'https://do9w53h57qmus.cloudfront.net',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
+  credentials: true
+}));
 app.use(express.json());
+// Trust CloudFront proxy
+app.set('trust proxy', true);
+
+// Force HTTPS interpretation based on CloudFront headers
+app.use((req, res, next) => {
+  if (req.headers['x-forwarded-proto'] === 'http') {
+    req.headers['x-forwarded-proto'] = 'https';
+  }
+  next();
+});
+
+app.use('/api', (req, res, next) => {
+  console.log('=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Authorization header:', req.headers.authorization);
+  console.log('=======================');
+  next();
+});
+app.use((req, res, next) => {
+  if (req.path.includes('/api/auth0')) {
+    console.log('🔍 Auth header received:', req.headers.authorization);
+    console.log('🔍 Expected:', `Bearer ${process.env.ACTION_SECRET}`);
+    console.log('🔍 ACTION_SECRET from env:', process.env.ACTION_SECRET);
+  }
+  next();
+});
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
+
 app.get('/api/auth0/users/:auth0Id', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.ACTION_SECRET}`) {
@@ -56,3 +102,40 @@ app.use("/api/inventory", inventoryRoutes);
 app.listen(process.env.PORT, () => {
   console.log("listening");
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
