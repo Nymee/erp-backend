@@ -16,13 +16,11 @@ const {
 router.get("/", getProducts);
 router.post(
   "/",
-  authenticateUser,
   validate(createProductSchema),
   createProduct
 );
 router.patch(
   "/:product_id",
-  authenticateUser,
   validate(updateProductSchema),
   updateProduct
 );

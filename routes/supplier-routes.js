@@ -17,18 +17,15 @@ router.get(
 router.post(
   "/",
   validate(updateSupplierSchema),
-  authenticateUser,
   authorizeRoles("SAU"),
   supplierController.createSupplier
 );
 router.get(
   "/:supplier_id",
-  authenticateUser,
   supplierController.getSupplierById
 );
 router.patch(
   "/:supplier_id",
-  authenticateUser,
   supplierController.updateSupplier
 );
 

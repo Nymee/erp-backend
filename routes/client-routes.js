@@ -13,7 +13,6 @@ router.get("/", validate(createClientSchema), clientController.getClients);
 router.post(
   "/",
   validate(updateClientSchema),
-  authenticateUser,
   authorizeRoles("SAU"),
   clientController.createClient
 );

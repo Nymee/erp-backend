@@ -10,7 +10,6 @@ router.get("/", inventoryController.getInventories);
 router.post(
   "/",
   validate(createInventorySchema),
-  authenticateUser,
   authorizeRoles("SAU"),
   inventoryController.createInventory
 );

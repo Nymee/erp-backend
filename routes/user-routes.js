@@ -7,7 +7,6 @@ const authorizeRoles = require("../middlewares/authorize-role");
 router.get("/", userController.getUsers);
 router.post(
   "/",
-  authenticateUser,
   authorizeRoles("SAU"),
   userController.createUser
 );
